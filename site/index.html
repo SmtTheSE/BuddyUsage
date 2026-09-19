@@ -11,20 +11,25 @@
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ivory: #f5f2eb;
-      --ivory-2: #ebe7dd;
-      --ink: #1a1917;
-      --ink-2: #4a4845;
-      --ink-3: #8a8782;
-      --line: rgba(26, 25, 23, 0.1);
+      --ivory: #f0eee6;
+      --ivory-2: #e8e6dc;
+      --ink: #141413;
+      --ink-2: #3d3d3a;
+      --ink-3: #87867f;
+      --line: #d5d3ca;
       --clay: #d97757;
       --clay-2: #c5643f;
       --ok: #34c759;
       --warn: #e5d63a;
       --critical: #ff4d1c;
-      --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif;
+      /* Anthropic sets display + body in a Tiempos-style serif and labels in a grotesque sans. */
+      --serif: 'Source Serif 4', 'Tiempos Text', Georgia, 'Times New Roman', serif;
+      --sans: 'Inter', 'Anthropic Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -32,80 +37,83 @@
       margin: 0;
       background: var(--ivory);
       color: var(--ink);
-      font-family: var(--sans);
-      font-size: 17px;
-      line-height: 1.55;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
     a { color: inherit; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-    h1, h2, h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.025em; margin: 0; }
-    h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; }
-    h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.12; }
-    h3 { font-size: 20px; line-height: 1.25; font-weight: 600; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; margin: 0; }
+    h1 { font-size: clamp(40px, 5.4vw, 60px); line-height: 1.08; }
+    h2 { font-size: clamp(30px, 4vw, 42px); line-height: 1.12; }
+    h3 { font-size: 22px; line-height: 1.25; }
+    button, .btn, .tab, .chip, .eyebrow, nav, .cta-note, .shot figcaption, .callout, .steps, footer, .faq summary, .row__hint, .providers { font-family: var(--sans); }
     p { margin: 0; }
     .muted { color: var(--ink-2); }
-    .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
+    .eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 
     /* nav */
-    nav { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--ivory) 85%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+    nav { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--ivory) 88%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
     nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 20px; text-decoration: none; }
     .brand img { width: 28px; height: 28px; border-radius: 8px; }
     .nav-links { display: flex; gap: 22px; align-items: center; font-size: 15px; }
     .nav-links a { text-decoration: none; color: var(--ink-2); }
     .nav-links a:hover { color: var(--ink); }
 
     /* buttons */
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid transparent; transition: transform 0.15s ease, background 0.15s ease; cursor: pointer; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 500; font-size: 15px; text-decoration: none; border: 1px solid transparent; transition: transform 0.15s ease, background 0.15s ease; cursor: pointer; }
     .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--clay); color: #fff; box-shadow: 0 6px 18px rgba(217, 119, 87, 0.28); }
+    .btn-primary { background: var(--clay); color: #fff; }
     .btn-primary:hover { background: var(--clay-2); }
-    .btn-secondary { background: #fff; color: var(--ink); border-color: var(--line); }
-    .btn-secondary:hover { background: #fbfaf7; }
+    .btn-secondary { background: transparent; color: var(--ink); border-color: var(--ink); }
+    .btn-secondary:hover { background: var(--ivory-2); }
     .btn-sm { padding: 8px 14px; font-size: 14px; }
 
     /* hero */
     .hero { padding: 72px 0 40px; }
-    .hero__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
-    .hero h1 { max-width: 12ch; margin: 18px 0 20px; }
-    .hero h1 em { font-style: normal; color: var(--clay); }
-    .hero .lede { font-size: 19px; max-width: 44ch; margin: 0 0 30px; }
+    .hero__grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
+    .hero h1 { max-width: 15ch; margin: 18px 0 20px; }
+    .hero h1 em { font-style: italic; color: var(--ink); }
+    .hero .lede { font-size: 20px; line-height: 1.5; max-width: 42ch; margin: 0 0 30px; }
     .cta { display: flex; gap: 12px; flex-wrap: wrap; }
     .cta-note { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
     .cta-note a { color: var(--ink-2); }
     .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-    .chip { font-size: 13px; padding: 5px 11px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); text-decoration: none; }
+    .chip { font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); text-decoration: none; }
     .hero__art { margin: 0; }
-    .hero__art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 30%; border-radius: 28px; box-shadow: 0 30px 80px rgba(26, 25, 23, 0.22); background: #101012; }
+    .hero__art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 30%; border-radius: 20px; border: 1px solid var(--line); background: #101012; }
 
     /* tour */
     .tour { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; align-items: start; }
     .shot { margin: 0; }
-    .shot img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 22px; box-shadow: 0 20px 50px rgba(26, 25, 23, 0.16); background: #101012; }
-    .shot figcaption { margin-top: 16px; font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+    .shot img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 16px; border: 1px solid var(--line); background: #101012; }
+    .shot figcaption { margin-top: 14px; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
     .shot figcaption strong { color: var(--ink); }
 
     /* sections */
     section { padding: 88px 0; }
     section + section { border-top: 1px solid var(--line); }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 40px; }
-    .feature h3 { margin-bottom: 8px; }
-    .feature .icon { width: 40px; height: 40px; border-radius: 12px; background: var(--ivory-2); display: grid; place-items: center; margin-bottom: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .feature { border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px 28px; background: transparent; display: flex; flex-direction: column; min-height: 240px; }
+    .feature h3 { margin: 12px 0 10px; }
+    .feature .icon { font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+    .feature p { font-size: 16px; line-height: 1.5; }
     .providers { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 28px; }
     .provider { display: flex; align-items: center; gap: 10px; font-weight: 500; }
     .provider svg { width: 22px; height: 22px; }
 
     /* install */
-    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--ivory-2); margin-top: 28px; }
-    .tab { border: none; background: none; padding: 8px 18px; border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; color: var(--ink-2); }
-    .tab[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(26, 25, 23, 0.12); }
+    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); margin-top: 28px; }
+    .tab { border: none; background: none; padding: 8px 18px; border-radius: 999px; font-weight: 500; font-size: 14px; cursor: pointer; color: var(--ink-2); }
+    .tab[aria-selected="true"] { background: var(--ink); color: var(--ivory); }
     .panel { display: none; margin-top: 28px; }
     .panel[data-active="true"] { display: block; }
     .steps { counter-reset: step; list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 14px; }
     .steps li { position: relative; padding-left: 44px; }
     .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--clay); color: #fff; font-weight: 600; font-size: 14px; display: grid; place-items: center; }
-    .callout { margin-top: 22px; padding: 16px 18px; border-radius: 16px; background: var(--ivory-2); font-size: 15px; }
+    .callout { margin-top: 22px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
     .callout > strong:first-child { display: block; margin-bottom: 4px; }
     .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
@@ -159,9 +167,9 @@
   <header class="hero">
     <div class="wrap hero__grid">
       <div class="hero__copy">
-        <div class="eyebrow">Free · Open source · macOS, Windows, Linux</div>
-        <h1>Your AI usage, <em>at a glance.</em></h1>
-        <p class="lede muted">A small glass island on the edge of your screen shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you've used, so you never hit a limit mid-thought.</p>
+        <div class="eyebrow">Free and open source · macOS, Windows, Linux</div>
+        <h1>Know where you stand with every AI assistant you use.</h1>
+        <p class="lede muted">BuddyUsage is a small island on the edge of your screen. It shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you have used, and when each limit resets, so a limit is never a surprise.</p>
         <div class="cta" id="cta">
           <a class="btn btn-primary" id="dl-primary" href="#install">Download</a>
           <a class="btn btn-secondary" href="#tour">See how it works</a>
@@ -179,8 +187,8 @@
 
   <section id="tour">
     <div class="wrap">
-      <div class="eyebrow">See it</div>
-      <h2 style="margin-top:12px;max-width:20ch">Everything you need is one hover away.</h2>
+      <div class="eyebrow">Product</div>
+      <h2 style="margin-top:12px;max-width:22ch">Everything you need, one hover away.</h2>
       <div class="tour">
         <figure class="shot">
           <img src="shot-update.jpg" alt="The Gemini card showing usage plus a banner offering a one-click update to a new version" loading="lazy" width="960" height="1280" />
@@ -200,23 +208,23 @@
 
   <section id="features">
     <div class="wrap">
-      <div class="eyebrow">Why</div>
-      <h2 style="max-width:22ch;margin-top:12px">Limits shouldn't be a surprise.</h2>
+      <div class="eyebrow">Why it exists</div>
+      <h2 style="max-width:24ch;margin-top:12px">Usage limits shape how you work. They should be visible.</h2>
       <div class="grid-3">
         <div class="feature">
-          <div class="icon">◐</div>
-          <h3>Always in view</h3>
-          <p class="muted">One ring per assistant, docked to the edge of your screen. Green, yellow, red. You know where you stand without opening anything.</p>
+          <div class="icon">Always in view</div>
+          <h3>One ring per assistant</h3>
+          <p class="muted">Docked to the edge of your screen, coloured by how close you are to the limit. You know where you stand without opening anything.</p>
         </div>
         <div class="feature">
-          <div class="icon">↻</div>
-          <h3>Keeps itself current</h3>
-          <p class="muted">Re-syncs when you use a tool, when a limit resets, after sleep, and whenever you open a card. Countdowns tick live. No refresh button to babysit.</p>
+          <div class="icon">Stays current</div>
+          <h3>Syncs on its own</h3>
+          <p class="muted">It re-syncs when you use a tool, when a limit resets, after sleep, and whenever you open a card. Countdowns tick live. There is no refresh button to babysit.</p>
         </div>
         <div class="feature">
-          <div class="icon">✦</div>
-          <h3>Every plan, every tool</h3>
-          <p class="muted">Session and weekly limits for paid plans. Free plans get an honest "no meter" state instead of an error. Drag it anywhere; collapse it to a slim tab.</p>
+          <div class="icon">Every plan</div>
+          <h3>Honest on every tier</h3>
+          <p class="muted">Session and weekly limits on paid plans. Free plans get a clear "no meter" state rather than an error. Nothing leaves your machine.</p>
         </div>
       </div>
       <div class="providers" aria-label="Supported assistants">
@@ -231,8 +239,8 @@
 
   <section id="install">
     <div class="wrap">
-      <div class="eyebrow">Install</div>
-      <h2 style="margin-top:12px">Up and running in a minute.</h2>
+      <div class="eyebrow">Get started</div>
+      <h2 style="margin-top:12px">Install in a minute.</h2>
       <p class="muted" style="margin-top:12px;max-width:60ch">Pick your computer. Every download is the latest release, straight from GitHub. BuddyUsage updates itself afterwards with one click inside the app.</p>
 
       <div class="tabs" role="tablist">
@@ -312,7 +320,7 @@ brew install --cask buddyusage</pre>
   <section id="faq">
     <div class="wrap">
       <div class="eyebrow">Questions</div>
-      <h2 style="margin-top:12px">Straight answers.</h2>
+      <h2 style="margin-top:12px">Common questions</h2>
       <div class="faq">
         <details><summary>How does it know my usage?</summary><p>It reads the same Settings → Usage page you'd open in a browser, in a hidden window that's signed in to your account. Nothing leaves your machine; there's no BuddyUsage server and no analytics.</p></details>
         <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT don't show percentages on free plans, so the ring says "Free" and the card explains instead of showing an error.</p></details>
