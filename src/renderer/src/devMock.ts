@@ -55,17 +55,24 @@ export function installDevMock(): void {
       metrics: [{ id: 'credits', label: 'AI credits', percentUsed: 30, used: 4.5, limit: 15, unit: '$', resetLabel: 'Oct 1' }]
     }
   ]
+  // ?providers=claude,chatgpt,gemini limits the mock to a subset (used for screenshots).
+  const params = new URLSearchParams(window.location.search)
+  const only = params.get('providers')?.split(',').filter(Boolean)
+  const enabled = Object.fromEntries(providers.map((p) => [p.id, !only || only.includes(p.id)]))
+  const quiet = params.get('quiet') === '1'
+  const theme = (params.get('theme') as AppSettings['theme'] | null) ?? 'auto'
+
   let settings: AppSettings = {
     schemaVersion: 2,
     refreshIntervalMinutes: 10,
-    enabledProviders: { claude: true, chatgpt: true, gemini: true, cursor: true, copilot: true },
+    enabledProviders: enabled,
     edge: 'right',
     verticalOffset: 120,
     islandCollapsed: false,
     menuBarUsage: false,
     onboardingSeen: true,
     launchAtLogin: false,
-    theme: 'auto'
+    theme
   }
   const noop = async (): Promise<void> => undefined
 
@@ -86,7 +93,7 @@ export function installDevMock(): void {
     onSettingsUpdated: () => () => undefined,
     onSyncStateChanged: () => () => undefined,
     getUpdateState: async () => ({
-      status: 'available',
+      status: quiet ? 'up_to_date' : 'available',
       currentVersion: '0.2.5',
       latestVersion: '0.3.0',
       releaseUrl: 'https://github.com/SmtTheSE/BuddyUsage/releases/latest',
