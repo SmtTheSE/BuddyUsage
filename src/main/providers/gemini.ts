@@ -10,20 +10,19 @@ import { clickByText, extractDialogOrBodyText } from '../scraping/pageActions'
  * a weekly tracker — the same session/weekly shape as Claude. There is no
  * deep link, so extraction opens the panel through the app's own menu.
  *
- * Google's exact wording isn't published, so the label lists below are
- * deliberately broad; the generic fallback (first percentage on the panel)
- * still yields a gauge if none match. The captured text is kept in the
- * cache (`buddyusage --json`) so labels can be tightened from real output.
+ * Labels match the panel's wording as captured live (see the fixture in
+ * parseHeuristics.test.ts): "Current usage … % used … Resets at …" and
+ * "Weekly limit … Resets <date> … % used".
  */
 const metrics: MetricSpec[] = [
   {
     id: 'session',
-    labels: ['Current session', 'Session usage', '5-hour', '5 hour', 'Current usage', 'Usage limits', 'Usage'],
-    displayLabel: 'Current session'
+    labels: ['Current usage', 'Current session'],
+    displayLabel: 'Current usage'
   },
   {
     id: 'weekly',
-    labels: ['Weekly limit', 'Weekly usage', 'This week', 'Weekly'],
+    labels: ['Weekly limit', 'Weekly usage'],
     displayLabel: 'Weekly limit'
   }
 ]

@@ -146,6 +146,53 @@ describe('extractMetrics', () => {
   })
 })
 
+describe('Gemini Usage limits panel', () => {
+  // Captured live from gemini.google.com → Settings → Usage limits on a
+  // signed-in Google AI subscriber account. Note the weekly section lists
+  // the reset line *before* the percentage.
+  const GEMINI_PANEL = `New chat
+Search chats
+Students
+Images
+Library
+Sitt Min Thar
+Usage limits
+
+Your plan's limits determine how much you can use Gemini over time. Advanced models and features can take up more usage. Learn more
+
+Updated just now
+
+Current usage
+
+37% used
+
+Resets at 7:07 PM
+
+Weekly limit
+
+Resets Sep 22 at 11:07 PM
+
+12% used`
+
+  const GEMINI_SPECS: MetricSpec[] = [
+    { id: 'session', labels: ['Current usage', 'Current session'], displayLabel: 'Current usage' },
+    { id: 'weekly', labels: ['Weekly limit', 'Weekly usage'], displayLabel: 'Weekly limit' }
+  ]
+
+  it('reads both windows with their reset phrases', () => {
+    const result = parseUsageText(GEMINI_PANEL, GEMINI_SPECS)
+    expect(result?.metrics).toEqual([
+      expect.objectContaining({ id: 'session', percentUsed: 37, resetLabel: 'at 7:07 PM' }),
+      expect.objectContaining({ id: 'weekly', percentUsed: 12, resetLabel: 'Sep 22 at 11:07 PM' })
+    ])
+  })
+
+  it('does not misread the account name or intro copy as usage', () => {
+    const result = parseUsageText(GEMINI_PANEL.replace('37% used', '0% used'), GEMINI_SPECS)
+    expect(result?.metrics[0].percentUsed).toBe(0)
+  })
+})
+
 describe('parseUsageText (full pipeline)', () => {
   it('returns labeled metrics plus the plan when the page matches the specs', () => {
     const result = parseUsageText(CLAUDE_USAGE_PAGE, CLAUDE_SPECS)
