@@ -4,16 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BuddyUsage: your AI usage, at a glance</title>
-  <meta name="description" content="A small glass island on the edge of your screen that shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you've used. Free and open source." />
+  <meta name="description" content="A small island on the edge of your screen that shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you have used. Free and open source." />
   <meta property="og:title" content="BuddyUsage: your AI usage, at a glance" />
-  <meta property="og:description" content="One ring per assistant. Hover for session and weekly limits. Never hit a limit by surprise again." />
+  <meta property="og:description" content="One ring per assistant. Session and weekly limits with live countdowns. Never hit a limit by surprise." />
   <meta property="og:image" content="https://smtthese.github.io/BuddyUsage/shot-island.jpg" />
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --ivory: #f0eee6;
@@ -22,129 +22,142 @@
       --ink-2: #3d3d3a;
       --ink-3: #87867f;
       --line: #d5d3ca;
+      --dark: #141413;
       --clay: #d97757;
-      --clay-2: #c5643f;
-      --ok: #34c759;
-      --warn: #e5d63a;
-      --critical: #ff4d1c;
-      /* Anthropic sets display + body in a Tiempos-style serif and labels in a grotesque sans. */
-      --serif: 'Source Serif 4', 'Tiempos Text', Georgia, 'Times New Roman', serif;
+      --serif: 'Source Serif 4', 'Tiempos Text', Georgia, serif;
       --sans: 'Inter', 'Anthropic Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--ivory);
-      color: var(--ink);
-      font-family: var(--serif);
-      font-size: 18px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
+    body { margin: 0; background: var(--ivory); color: var(--ink); font-family: var(--serif); font-size: 18px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
     a { color: inherit; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-    h1, h2, h3 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; margin: 0; }
-    h1 { font-size: clamp(40px, 5.4vw, 60px); line-height: 1.08; }
-    h2 { font-size: clamp(30px, 4vw, 42px); line-height: 1.12; }
-    h3 { font-size: 22px; line-height: 1.25; }
-    button, .btn, .tab, .chip, .eyebrow, nav, .cta-note, .shot figcaption, .callout, .steps, footer, .faq summary, .row__hint, .providers { font-family: var(--sans); }
     p { margin: 0; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
     .muted { color: var(--ink-2); }
-    .eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+    .label { font-family: var(--sans); font-size: 11.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+
+    /* Display type: heavy grotesque, tight, with underlined emphasis (anthropic.com hero). */
+    .display { font-family: var(--sans); font-weight: 700; letter-spacing: -0.03em; line-height: 1.02; margin: 0; }
+    h1.display { font-size: clamp(44px, 5.6vw, 68px); }
+    h2.display { font-size: clamp(30px, 3.6vw, 44px); }
+    .display u { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+    .serif-h { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; margin: 0; }
+    h2.serif-h { font-size: clamp(30px, 3.4vw, 40px); }
+    h3.serif-h { font-size: 24px; }
 
     /* nav */
-    nav { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--ivory) 88%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
-    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 20px; text-decoration: none; }
-    .brand img { width: 28px; height: 28px; border-radius: 8px; }
-    .nav-links { display: flex; gap: 22px; align-items: center; font-size: 15px; }
-    .nav-links a { text-decoration: none; color: var(--ink-2); }
-    .nav-links a:hover { color: var(--ink); }
+    nav { position: sticky; top: 0; z-index: 10; background: var(--ivory); }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+    .wordmark { font-family: var(--sans); font-weight: 700; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .wordmark img { width: 22px; height: 22px; border-radius: 6px; }
+    .nav-links { display: flex; align-items: center; gap: 26px; font-family: var(--sans); font-size: 14px; font-weight: 500; }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
 
     /* buttons */
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-weight: 500; font-size: 15px; text-decoration: none; border: 1px solid transparent; transition: transform 0.15s ease, background 0.15s ease; cursor: pointer; }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--clay); color: #fff; }
-    .btn-primary:hover { background: var(--clay-2); }
-    .btn-secondary { background: transparent; color: var(--ink); border-color: var(--ink); }
-    .btn-secondary:hover { background: var(--ivory-2); }
-    .btn-sm { padding: 8px 14px; font-size: 14px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 999px; font-family: var(--sans); font-weight: 500; font-size: 14px; text-decoration: none; border: 1px solid var(--ink); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+    .btn-dark { background: var(--ink); color: var(--ivory); }
+    .btn-dark:hover { background: #2a2a28; }
+    .btn-light { background: transparent; color: var(--ink); }
+    .btn-light:hover { background: var(--ivory-2); }
+    .btn-split { padding: 0; overflow: hidden; }
+    .btn-split > a { padding: 11px 16px; display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
+    .btn-split > a + a { border-left: 1px solid rgba(240, 238, 230, 0.25); padding: 11px 12px; }
+    .btn-split > a:hover { text-decoration: none; background: #2a2a28; }
+    .link { font-family: var(--sans); font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
 
     /* hero */
     .hero { padding: 72px 0 40px; }
-    .hero__grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
-    .hero h1 { max-width: 15ch; margin: 18px 0 20px; }
-    .hero h1 em { font-style: italic; color: var(--ink); }
-    .hero .lede { font-size: 20px; line-height: 1.5; max-width: 42ch; margin: 0 0 30px; }
-    .cta { display: flex; gap: 12px; flex-wrap: wrap; }
-    .cta-note { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
-    .cta-note a { color: var(--ink-2); }
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-    .chip { font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); text-decoration: none; }
-    .hero__art { margin: 0; }
-    .hero__art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 30%; border-radius: 20px; border: 1px solid var(--line); background: #101012; }
+    .hero__grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 64px; align-items: start; }
+    .hero__lede { font-size: 20px; line-height: 1.5; padding-top: 12px; }
+    .hero__cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .hero__note { margin-top: 14px; font-family: var(--sans); font-size: 13px; color: var(--ink-3); }
+    .hero__note a { color: var(--ink-2); }
 
-    /* tour */
-    .tour { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; align-items: start; }
-    .shot { margin: 0; }
-    .shot img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 16px; border: 1px solid var(--line); background: #101012; }
-    .shot figcaption { margin-top: 14px; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
-    .shot figcaption strong { color: var(--ink); }
+    /* dark media block */
+    .media { margin-top: 48px; border-radius: 24px; background: var(--dark); overflow: hidden; aspect-ratio: 16 / 8; position: relative; }
+    .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right 20%; }
+    .media__caption { position: absolute; left: 28px; bottom: 24px; color: var(--ivory); font-family: var(--sans); font-size: 13px; opacity: 0.8; }
 
-    /* sections */
     section { padding: 88px 0; }
-    section + section { border-top: 1px solid var(--line); }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
-    .feature { border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px 28px; background: transparent; display: flex; flex-direction: column; min-height: 240px; }
-    .feature h3 { margin: 12px 0 10px; }
-    .feature .icon { font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-    .feature p { font-size: 16px; line-height: 1.5; }
-    .providers { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 28px; }
-    .provider { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-    .provider svg { width: 22px; height: 22px; }
+    .rule { border-top: 1px solid var(--line); }
+
+    /* feature row: media + text */
+    .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    .feature-row img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 40%; border-radius: 20px; background: var(--dark); display: block; }
+    .feature-row .serif-h { margin-bottom: 16px; }
+    .feature-row p { font-size: 18px; max-width: 46ch; }
+    .feature-row .link { display: inline-block; margin-top: 22px; }
+
+    /* list with metadata columns (anthropic "Latest releases") */
+    .list { margin-top: 36px; border-top: 1px solid var(--line); }
+    .row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; padding: 32px 0; border-bottom: 1px solid var(--line); }
+    .row h3 { margin-bottom: 10px; }
+    .row p { font-size: 17px; max-width: 52ch; }
+    .row .link { display: inline-block; margin-top: 16px; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-content: start; font-family: var(--sans); font-size: 14px; }
+    .meta .label { margin-bottom: 6px; }
+
+    /* statement */
+    .statement { text-align: center; padding: 120px 0; }
+    .statement .serif-h { font-size: clamp(32px, 4.4vw, 54px); max-width: 22ch; margin: 0 auto; line-height: 1.15; }
+
+    /* card grid */
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 36px; }
+    .card { border: 1px solid var(--line); border-radius: 16px; padding: 24px 22px; min-height: 190px; display: flex; flex-direction: column; justify-content: space-between; text-decoration: none; }
+    .card:hover { background: var(--ivory-2); }
+    .card h3 { font-size: 22px; margin-bottom: 14px; }
+    .card p { font-size: 16px; color: var(--ink-2); }
+    .card .label { margin-top: 18px; }
 
     /* install */
-    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); margin-top: 28px; }
-    .tab { border: none; background: none; padding: 8px 18px; border-radius: 999px; font-weight: 500; font-size: 14px; cursor: pointer; color: var(--ink-2); }
+    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); margin-top: 30px; }
+    .tab { border: none; background: none; padding: 8px 18px; border-radius: 999px; font-family: var(--sans); font-weight: 500; font-size: 14px; cursor: pointer; color: var(--ink-2); }
     .tab[aria-selected="true"] { background: var(--ink); color: var(--ivory); }
-    .panel { display: none; margin-top: 28px; }
+    .panel { display: none; margin-top: 30px; }
     .panel[data-active="true"] { display: block; }
-    .steps { counter-reset: step; list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 14px; }
-    .steps li { position: relative; padding-left: 44px; }
-    .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--clay); color: #fff; font-weight: 600; font-size: 14px; display: grid; place-items: center; }
-    .callout { margin-top: 22px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
-    .callout > strong:first-child { display: block; margin-bottom: 4px; }
-    .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+    .dl-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hint { margin-top: 12px; font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 14px; max-width: 70ch; }
+    .steps li { position: relative; padding-left: 44px; font-size: 17px; }
+    .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--ink); font-family: var(--sans); font-weight: 600; font-size: 13px; display: grid; place-items: center; }
+    .callout { margin-top: 26px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--line); font-size: 16px; max-width: 70ch; }
+    .callout > strong:first-child { display: block; font-family: var(--sans); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; }
     pre { margin: 12px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--ink); color: var(--ivory); overflow-x: auto; }
-    .alt { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
-    .alt summary { cursor: pointer; font-weight: 600; }
+    .alt { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); max-width: 70ch; }
+    .alt summary { cursor: pointer; font-family: var(--sans); font-weight: 500; font-size: 14px; }
 
     /* faq */
-    .faq { display: grid; gap: 6px; margin-top: 28px; max-width: 760px; }
-    .faq details { border-top: 1px solid var(--line); padding: 16px 0; }
-    .faq summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; }
+    .faq { margin-top: 36px; max-width: 800px; border-top: 1px solid var(--line); }
+    .faq details { border-bottom: 1px solid var(--line); padding: 20px 0; }
+    .faq summary { cursor: pointer; font-family: var(--sans); font-weight: 500; font-size: 16px; list-style: none; display: flex; justify-content: space-between; }
     .faq summary::after { content: '+'; color: var(--ink-3); }
     .faq details[open] summary::after { content: '–'; }
-    .faq p { margin-top: 10px; color: var(--ink-2); }
+    .faq p { margin-top: 12px; color: var(--ink-2); font-size: 17px; }
 
-    footer { padding: 40px 0 60px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3); }
-    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    footer a { color: var(--ink-2); text-decoration: none; margin-left: 18px; }
+    /* footer */
+    footer { border-top: 1px solid var(--line); padding: 48px 0 40px; font-family: var(--sans); font-size: 13.5px; }
+    .foot { display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 32px; }
+    .foot h4 { margin: 0 0 12px; font-size: 13.5px; font-weight: 600; }
+    .foot ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+    .foot a { text-decoration: none; color: var(--ink-2); }
+    .foot a:hover { text-decoration: underline; }
+    .foot .copy { color: var(--ink-3); line-height: 1.6; }
 
     @media (max-width: 900px) {
-      .hero__grid { grid-template-columns: 1fr; gap: 36px; }
-      .hero h1 { max-width: 14ch; }
-      .tour { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 820px) {
-      .grid-3 { grid-template-columns: 1fr; gap: 28px; }
-      .nav-links a:not(.btn) { display: none; }
-      .brand { font-size: 15px; }
-      nav .wrap { gap: 12px; }
+      .hero__grid, .feature-row, .row { grid-template-columns: 1fr; gap: 24px; }
+      .cards { grid-template-columns: 1fr; }
+      .foot { grid-template-columns: 1fr 1fr; }
+      .nav-links > a { display: none; }
+      .btn-split > a + a { display: none; }
+      .wordmark { font-size: 13px; letter-spacing: 0.08em; }
+      nav .wrap { height: 64px; }
+      .wrap { padding: 0 20px; }
+      h1.display { font-size: clamp(36px, 10vw, 44px); }
+      .media { aspect-ratio: 4 / 3; }
       section { padding: 64px 0; }
-      .hero { padding-top: 64px; }
+      .statement { padding: 80px 0; }
     }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
@@ -152,96 +165,161 @@
 <body>
   <nav>
     <div class="wrap">
-      <a class="brand" href="#"><img src="icon.png" alt="" /> BuddyUsage</a>
+      <a class="wordmark" href="#"><img src="icon.png" alt="" />BuddyUsage</a>
       <div class="nav-links">
-        <a href="#tour">Tour</a>
-        <a href="#features">Features</a>
+        <a href="#product">Product</a>
+        <a href="#providers">Providers</a>
         <a href="#install">Install</a>
         <a href="#faq">FAQ</a>
         <a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a>
-        <a class="btn btn-primary btn-sm" href="#install">Download</a>
+        <span class="btn btn-dark btn-split"><a href="#install">Download</a><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest" target="_blank" rel="noopener" aria-label="All downloads">⌄</a></span>
       </div>
     </div>
   </nav>
 
   <header class="hero">
-    <div class="wrap hero__grid">
-      <div class="hero__copy">
-        <div class="eyebrow">Free and open source · macOS, Windows, Linux</div>
-        <h1>Know where you stand with every AI assistant you use.</h1>
-        <p class="lede muted">BuddyUsage is a small island on the edge of your screen. It shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you have used, and when each limit resets, so a limit is never a surprise.</p>
-        <div class="cta" id="cta">
-          <a class="btn btn-primary" id="dl-primary" href="#install">Download</a>
-          <a class="btn btn-secondary" href="#tour">See how it works</a>
-        </div>
-        <p class="cta-note" id="cta-note">Latest release · <a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest" target="_blank" rel="noopener">all downloads</a></p>
-        <div class="chips" aria-label="Providers">
-          <span class="chip">Claude</span><span class="chip">ChatGPT · Codex</span><span class="chip">Gemini</span><span class="chip">Cursor</span><span class="chip">GitHub Copilot</span>
+    <div class="wrap">
+      <div class="hero__grid">
+        <h1 class="display">Know where you stand with <u>every AI assistant</u> you use</h1>
+        <div>
+          <p class="hero__lede">A limit should never be a surprise. BuddyUsage is a small island on the edge of your screen that shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you have used, and when each limit resets.</p>
+          <div class="hero__cta">
+            <a class="btn btn-dark" id="dl-primary" href="#install">Download</a>
+            <a class="btn btn-light" href="#product">Learn more</a>
+          </div>
+          <p class="hero__note" id="cta-note">Free and open source · macOS, Windows, Linux</p>
         </div>
       </div>
-      <figure class="hero__art">
-        <img src="shot-island.jpg" alt="The BuddyUsage island on the right edge of the screen with the Claude usage card open" width="960" height="1280" />
-      </figure>
+      <div class="media" aria-label="BuddyUsage island with the Claude usage card open">
+        <img src="shot-island.jpg" alt="The BuddyUsage island on the right edge of the screen, with the Claude usage card open showing session and weekly limits" width="960" height="1280" />
+        <span class="media__caption">The island, docked to the right edge, with the Claude card open.</span>
+      </div>
     </div>
   </header>
 
-  <section id="tour">
+  <section id="product">
     <div class="wrap">
-      <div class="eyebrow">Product</div>
-      <h2 style="margin-top:12px;max-width:22ch">Everything you need, one hover away.</h2>
-      <div class="tour">
-        <figure class="shot">
-          <img src="shot-update.jpg" alt="The Gemini card showing usage plus a banner offering a one-click update to a new version" loading="lazy" width="960" height="1280" />
-          <figcaption><strong>Hover a ring</strong> for session and weekly limits with live countdowns. New versions install with one click, right from the card.</figcaption>
-        </figure>
-        <figure class="shot">
-          <img src="shot-collapsed.jpg" alt="The island collapsed into a slim tab with three coloured status dots" loading="lazy" width="960" height="1280" />
-          <figcaption><strong>Collapse it</strong> to a slim tab with status dots when you want the screen back. Hover to peek. Drag it anywhere and it snaps to any edge.</figcaption>
-        </figure>
-        <figure class="shot shot--tall">
-          <img src="shot-settings.jpg" alt="BuddyUsage settings: provider toggles, refresh interval, screen edge, menu-bar readout" loading="lazy" width="940" height="1520" />
-          <figcaption><strong>Settings</strong> that fit on one screen: pick your assistants, refresh rate, edge, appearance, and an optional menu-bar readout.</figcaption>
-        </figure>
+      <div class="feature-row">
+        <img src="shot-update.jpg" alt="The Gemini card with an in-app update banner" loading="lazy" width="960" height="1280" />
+        <div>
+          <h2 class="serif-h">One ring per assistant. Everything else, one hover away.</h2>
+          <p class="muted">Each ring is coloured by how close you are to the limit. Hover for session and weekly limits with countdowns that tick live. Click to pin the card. Drag the island anywhere and it snaps to the nearest edge; collapse it to a slim tab when you want the screen back. New versions install with one click, right from the card.</p>
+          <a class="link" href="#install">Install BuddyUsage</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="features">
+  <section id="providers" class="rule">
     <div class="wrap">
-      <div class="eyebrow">Why it exists</div>
-      <h2 style="max-width:24ch;margin-top:12px">Usage limits shape how you work. They should be visible.</h2>
-      <div class="grid-3">
-        <div class="feature">
-          <div class="icon">Always in view</div>
-          <h3>One ring per assistant</h3>
-          <p class="muted">Docked to the edge of your screen, coloured by how close you are to the limit. You know where you stand without opening anything.</p>
+      <h2 class="display">Supported assistants</h2>
+      <div class="list">
+        <div class="row">
+          <div>
+            <h3 class="serif-h">Claude</h3>
+            <p class="muted">Reads claude.ai, Settings, Usage: the current session limit and weekly limits per model family, each with its reset time.</p>
+            <a class="link" href="https://claude.ai/settings/usage" target="_blank" rel="noopener">Open dashboard</a>
+          </div>
+          <div class="meta">
+            <div><div class="label">Meters</div>Session, weekly</div>
+            <div><div class="label">Paid plans</div>Pro, Max, Team</div>
+            <div><div class="label">Free plan</div>No meter published; shown as Free</div>
+          </div>
         </div>
-        <div class="feature">
-          <div class="icon">Stays current</div>
-          <h3>Syncs on its own</h3>
-          <p class="muted">It re-syncs when you use a tool, when a limit resets, after sleep, and whenever you open a card. Countdowns tick live. There is no refresh button to babysit.</p>
+        <div class="row">
+          <div>
+            <h3 class="serif-h">ChatGPT and Codex</h3>
+            <p class="muted">ChatGPT publishes no meter for chat. The Codex limits page is the one meter tied to a ChatGPT account, so that is what is shown.</p>
+            <a class="link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noopener">Open dashboard</a>
+          </div>
+          <div class="meta">
+            <div><div class="label">Meters</div>5-hour, weekly</div>
+            <div><div class="label">Paid plans</div>Plus, Pro, Team</div>
+            <div><div class="label">Free plan</div>No meter published</div>
+          </div>
         </div>
-        <div class="feature">
-          <div class="icon">Every plan</div>
-          <h3>Honest on every tier</h3>
-          <p class="muted">Session and weekly limits on paid plans. Free plans get a clear "no meter" state rather than an error. Nothing leaves your machine.</p>
+        <div class="row">
+          <div>
+            <h3 class="serif-h">Gemini</h3>
+            <p class="muted">Reads the Gemini app's Usage limits panel: current usage with a 5-hour reset and a weekly limit. Google shows it on every plan.</p>
+            <a class="link" href="https://gemini.google.com/app" target="_blank" rel="noopener">Open dashboard</a>
+          </div>
+          <div class="meta">
+            <div><div class="label">Meters</div>Current, weekly</div>
+            <div><div class="label">Paid plans</div>AI Plus, Pro, Ultra</div>
+            <div><div class="label">Free plan</div>Real gauges</div>
+          </div>
         </div>
-      </div>
-      <div class="providers" aria-label="Supported assistants">
-        <span class="provider"><svg viewBox="0 0 24 24"><path fill="#D97757" d="m4.71 15.96 4.72-2.65.08-.23-.08-.13h-.23l-.79-.05-2.7-.07-2.34-.1-2.26-.12-.57-.12-.53-.7.05-.35.48-.32.69.06 1.52.1 2.28.16 1.65.1 2.45.25h.39l.05-.16-.13-.1-.1-.1L6.97 9.84l-2.55-1.69-1.34-.97-.72-.49-.36-.46-.16-1.01.66-.72.88.06.22.06.9.69 1.9 1.47 2.49 1.83.36.3.15-.1.02-.07-.16-.27-1.36-2.45-1.44-2.49-.64-1.03-.17-.62c-.06-.26-.1-.47-.1-.73l.75-1.02.41-.13 1 .13.42.36.62 1.42 1 2.23 1.55 3.03.46.9.24.83.09.26h.16v-.15l.13-1.7.24-2.1.23-2.7.08-.76.38-.91.75-.49.58.28.48.69-.07.44-.28 1.85-.56 2.9-.36 1.94h.21l.24-.24.98-1.3 1.65-2.07.73-.82.85-.9.55-.43h1.03l.76 1.13-.34 1.17-1.06 1.35-.88 1.14-1.26 1.7-.79 1.36.07.11.19-.02 2.85-.6 1.54-.28 1.84-.32.83.39.09.4-.33.8-1.97.49-2.3.46-3.44.81-.04.03.05.06 1.55.15.66.04h1.62l3.02.22.79.52.47.64-.08.49-1.21.62-1.64-.39-3.83-.91-1.31-.33h-.18v.11l1.09 1.07 2 1.81 2.51 2.33.13.58-.32.45-.34-.05-2.2-1.66-.85-.75-1.92-1.62h-.13v.17l.44.65 2.34 3.52.12 1.08-.17.35-.61.21-.67-.12-1.37-1.92L14.38 17.96l-1.14-1.94-.14.08-.67 7.25-.32.37-.73.28-.6-.46-.32-.75.32-1.47.39-1.93.32-1.53.28-1.9.17-.63-.01-.04-.14.02-1.43 1.97-2.18 2.94-1.72 1.85-.41.16-.72-.37.07-.66.4-.59 2.39-3.03 1.44-1.88.93-1.09v-.16h-.06l-6.34 4.12-1.13.14-.48-.45.06-.75.23-.24 1.9-1.31Z"/></svg>Claude</span>
-        <span class="provider"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#10A37F" stroke-width="2.2"/><circle cx="12" cy="12" r="3" fill="#10A37F"/></svg>ChatGPT · Codex</span>
-        <span class="provider"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg>Gemini</span>
-        <span class="provider"><svg viewBox="0 0 24 24"><path fill="#8B5CF6" d="M11.5.13 1.89 5.68a.84.84 0 0 0-.42.72v11.19c0 .3.16.58.42.72l9.61 5.55a1 1 0 0 0 1 0l9.61-5.55a.84.84 0 0 0 .42-.72V6.4a.84.84 0 0 0-.42-.72L12.5.13a1 1 0 0 0-1 0Z"/></svg>Cursor</span>
-        <span class="provider"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#6E7681" stroke-width="2"/><circle cx="9" cy="12" r="1.6" fill="#6E7681"/><circle cx="15" cy="12" r="1.6" fill="#6E7681"/></svg>GitHub Copilot</span>
+        <div class="row">
+          <div>
+            <h3 class="serif-h">Cursor</h3>
+            <p class="muted">Reads the Cursor dashboard: included usage per model pool in dollars, resetting with the billing cycle. Off by default; switch on in Settings.</p>
+            <a class="link" href="https://cursor.com/dashboard?tab=usage" target="_blank" rel="noopener">Open dashboard</a>
+          </div>
+          <div class="meta">
+            <div><div class="label">Meters</div>Included usage</div>
+            <div><div class="label">Paid plans</div>Pro, Ultra, Teams</div>
+            <div><div class="label">Free plan</div>Hobby, once used</div>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <h3 class="serif-h">GitHub Copilot</h3>
+            <p class="muted">Reads GitHub, Settings, Billing, Metered usage: AI Credits used of included, or premium requests on legacy plans. Off by default.</p>
+            <a class="link" href="https://github.com/settings/billing/usage" target="_blank" rel="noopener">Open dashboard</a>
+          </div>
+          <div class="meta">
+            <div><div class="label">Meters</div>AI Credits</div>
+            <div><div class="label">Paid plans</div>Pro, Pro+, Business</div>
+            <div><div class="label">Free plan</div>Metered, once used</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="install">
+  <div class="statement rule">
     <div class="wrap">
-      <div class="eyebrow">Get started</div>
-      <h2 style="margin-top:12px">Install in a minute.</h2>
-      <p class="muted" style="margin-top:12px;max-width:60ch">Pick your computer. Every download is the latest release, straight from GitHub. BuddyUsage updates itself afterwards with one click inside the app.</p>
+      <h2 class="serif-h">Usage limits shape how you work. They should be visible.</h2>
+    </div>
+  </div>
+
+  <section class="rule" id="how">
+    <div class="wrap">
+      <h2 class="display">How it works</h2>
+      <div class="cards">
+        <a class="card" href="#faq">
+          <div><h3 class="serif-h">Reads what you can already see</h3><p>A hidden window signed in to your account reads the same Settings and Usage page you would open yourself.</p></div>
+          <div class="label">Privacy</div>
+        </a>
+        <a class="card" href="#faq">
+          <div><h3 class="serif-h">Syncs on its own</h3><p>When you use a tool, when a limit resets, after sleep, and whenever you open a card. Nothing is requested twice.</p></div>
+          <div class="label">Freshness</div>
+        </a>
+        <a class="card" href="#faq">
+          <div><h3 class="serif-h">Honest on free plans</h3><p>Where a provider publishes no meter, the ring says Free and the card explains, instead of showing an error.</p></div>
+          <div class="label">Every plan</div>
+        </a>
+        <a class="card" href="#install">
+          <div><h3 class="serif-h">Installs in a minute</h3><p>Native builds for macOS, Windows and Linux. Updates itself afterwards with one click inside the app.</p></div>
+          <div class="label">Install</div>
+        </a>
+        <a class="card" href="#faq">
+          <div><h3 class="serif-h">Stays out of the way</h3><p>Drag it to any edge of any display. Collapse it to a slim tab with status dots. Optional menu-bar readout.</p></div>
+          <div class="label">Design</div>
+        </a>
+        <a class="card" href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">
+          <div><h3 class="serif-h">Open source</h3><p>MIT licensed. Adding an assistant is one file and one registry line. Read the code, file an issue, send a pull request.</p></div>
+          <div class="label">GitHub</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" class="rule">
+    <div class="wrap">
+      <h2 class="display">Install</h2>
+      <p class="muted" style="margin-top:14px;max-width:56ch">Pick your computer. Every download is the latest release from GitHub. After that, BuddyUsage updates itself.</p>
 
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-tab="mac" aria-selected="true">macOS</button>
@@ -251,24 +329,23 @@
 
       <div class="panel" data-panel="mac" data-active="true">
         <div class="dl-row">
-          <a class="btn btn-primary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">Download for Apple Silicon</a>
-          <a class="btn btn-secondary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">Download for Intel</a>
+          <a class="btn btn-dark" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">Download for Apple Silicon</a>
+          <a class="btn btn-light" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">Download for Intel</a>
         </div>
-        <p class="muted" style="margin-top:10px;font-size:14px">Not sure? Apple menu, then <strong>About This Mac</strong>. "Apple M" means Apple Silicon.</p>
+        <p class="hint">Not sure which? Apple menu, then <strong>About This Mac</strong>. "Apple M" means Apple Silicon.</p>
         <ol class="steps">
           <li>Open the downloaded <code>.dmg</code> and drag <strong>BuddyUsage</strong> onto <strong>Applications</strong>.</li>
           <li>Open Applications and double-click <strong>BuddyUsage</strong>. The island appears on the right edge; its icon sits in the menu bar.</li>
-          <li>Click a ring → <strong>Sign in</strong>. A normal browser window opens on that provider's own login page. Once per provider.</li>
+          <li>Click a ring, then <strong>Sign in</strong>. A normal browser window opens on that provider's own login page. Once per provider.</li>
         </ol>
         <div class="callout">
           <strong>If macOS says it "could not verify" the app</strong>
-          Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>, then confirm. This happens once. BuddyUsage is open source and not yet notarized with a paid Apple Developer ID. On older macOS: right-click the app → Open.
+          Open <strong>System Settings</strong>, then <strong>Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>, then confirm. This happens once. BuddyUsage is open source and not yet notarized with a paid Apple Developer ID. On older macOS, right-click the app and choose Open.
         </div>
         <details class="alt">
-          <summary>Prefer no prompt at all? Install from Terminal</summary>
-          <p class="muted" style="margin-top:10px;font-size:15px">Paste into Terminal (Applications → Utilities). Downloads without a browser, so there's no security prompt.</p>
+          <summary>Install from Terminal instead (no security prompt)</summary>
           <pre>curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash</pre>
-          <p class="muted" style="margin-top:14px;font-size:15px">Homebrew:</p>
+          <p class="hint">Homebrew:</p>
           <pre>brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
 brew trust SmtTheSE/buddyusage
 brew install --cask buddyusage</pre>
@@ -277,17 +354,17 @@ brew install --cask buddyusage</pre>
 
       <div class="panel" data-panel="win">
         <div class="dl-row">
-          <a class="btn btn-primary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe">Download for Windows</a>
-          <a class="btn btn-secondary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe">Windows on ARM</a>
+          <a class="btn btn-dark" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe">Download for Windows</a>
+          <a class="btn btn-light" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe">Windows on ARM</a>
         </div>
         <ol class="steps">
           <li>Run the downloaded installer. It installs for your user only, with no admin prompt, and starts automatically.</li>
           <li>The island appears on the right edge; the icon sits in the system tray.</li>
-          <li>Click a ring → <strong>Sign in</strong>. Once per provider.</li>
+          <li>Click a ring, then <strong>Sign in</strong>. Once per provider.</li>
         </ol>
         <div class="callout">
           <strong>If Windows shows "Windows protected your PC"</strong>
-          Click <strong>More info → Run anyway</strong>. This is SmartScreen noticing the installer isn't code-signed; it happens once.
+          Click <strong>More info</strong>, then <strong>Run anyway</strong>. SmartScreen is noting that the installer is not code-signed. It happens once.
         </div>
         <details class="alt">
           <summary>PowerShell one-liner</summary>
@@ -297,17 +374,17 @@ brew install --cask buddyusage</pre>
 
       <div class="panel" data-panel="linux">
         <div class="dl-row">
-          <a class="btn btn-primary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage">Download AppImage (x86_64)</a>
-          <a class="btn btn-secondary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage">AppImage (ARM64)</a>
+          <a class="btn btn-dark" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage">Download AppImage (x86_64)</a>
+          <a class="btn btn-light" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage">AppImage (ARM64)</a>
         </div>
         <ol class="steps">
-          <li>Make it executable: right-click → Properties → "Allow executing as program" (or <code>chmod +x</code>).</li>
+          <li>Make it executable: right-click, Properties, "Allow executing as program" (or <code>chmod +x</code>).</li>
           <li>Double-click to run. The island docks to the right edge of your primary display.</li>
-          <li>Click a ring → <strong>Sign in</strong>. Once per provider.</li>
+          <li>Click a ring, then <strong>Sign in</strong>. Once per provider.</li>
         </ol>
         <div class="callout">
           <strong>Good to know</strong>
-          Transparency needs a compositing window manager. Click-through on the island's empty margin isn't available on Linux.
+          Transparency needs a compositing window manager. Click-through on the island's empty margin is not available on Linux.
         </div>
         <details class="alt">
           <summary>Terminal one-liner</summary>
@@ -317,30 +394,33 @@ brew install --cask buddyusage</pre>
     </div>
   </section>
 
-  <section id="faq">
+  <section id="faq" class="rule">
     <div class="wrap">
-      <div class="eyebrow">Questions</div>
-      <h2 style="margin-top:12px">Common questions</h2>
+      <h2 class="display">Questions</h2>
       <div class="faq">
-        <details><summary>How does it know my usage?</summary><p>It reads the same Settings → Usage page you'd open in a browser, in a hidden window that's signed in to your account. Nothing leaves your machine; there's no BuddyUsage server and no analytics.</p></details>
-        <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT don't show percentages on free plans, so the ring says "Free" and the card explains instead of showing an error.</p></details>
-        <details><summary>Why does my Mac warn me the first time?</summary><p>The app isn't notarized with a paid Apple Developer ID, so Gatekeeper asks once. It's a standard step for open-source Mac apps: System Settings → Privacy &amp; Security → Open Anyway. The Terminal installer avoids the prompt entirely.</p></details>
+        <details><summary>How does it know my usage?</summary><p>It reads the same Settings and Usage page you would open in a browser, in a hidden window signed in to your account. Nothing leaves your machine. There is no BuddyUsage server and no analytics.</p></details>
+        <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT do not show percentages on free plans, so the ring says Free and the card explains instead of showing an error.</p></details>
+        <details><summary>Why does my Mac warn me the first time?</summary><p>The app is not notarized with a paid Apple Developer ID, so Gatekeeper asks once. It is a standard step for open-source Mac apps: System Settings, Privacy &amp; Security, Open Anyway. The Terminal installer avoids the prompt entirely.</p></details>
         <details><summary>Will it slow my machine down or hammer the sites?</summary><p>It polls every few minutes and otherwise reacts to real events: you using a tool, a limit resetting, waking from sleep. Every trigger funnels into one fetch per provider, so nothing is requested twice.</p></details>
-        <details><summary>Can I move it, hide it, change it?</summary><p>Drag it anywhere and it snaps to the nearest edge of any display. The ‹ handle collapses it to a slim tab. Settings lets you pick providers, refresh rate, edge, appearance, and an optional menu-bar readout.</p></details>
-        <details><summary>How do updates work?</summary><p>BuddyUsage checks GitHub Releases in the background. When there's a new version you'll see a dot on the island and an Update button. One click installs it and restarts. A download link is always there too.</p></details>
+        <details><summary>Can I move it, hide it, change it?</summary><p>Drag it anywhere and it snaps to the nearest edge of any display. The handle collapses it to a slim tab. Settings lets you pick providers, refresh rate, edge, appearance, and an optional menu-bar readout.</p></details>
+        <details><summary>How do updates work?</summary><p>BuddyUsage checks GitHub Releases in the background. When there is a new version you will see a dot on the island and an Update button. One click installs it and restarts. A download link is always there too.</p></details>
       </div>
     </div>
   </section>
 
   <footer>
-    <div class="wrap">
-      <span>BuddyUsage · MIT License · Not affiliated with Anthropic, OpenAI, Google, Cursor or GitHub.</span>
-      <span><a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/SmtTheSE/BuddyUsage/releases" target="_blank" rel="noopener">Releases</a><a href="https://github.com/SmtTheSE/BuddyUsage/issues" target="_blank" rel="noopener">Report an issue</a></span>
+    <div class="wrap foot">
+      <div>
+        <div class="wordmark" style="margin-bottom:12px"><img src="icon.png" alt="" />BuddyUsage</div>
+        <p class="copy">© 2026 BuddyUsage · MIT License<br />Not affiliated with Anthropic, OpenAI, Google, Cursor or GitHub.</p>
+      </div>
+      <div><h4>Product</h4><ul><li><a href="#product">Overview</a></li><li><a href="#providers">Supported assistants</a></li><li><a href="#how">How it works</a></li><li><a href="#faq">Questions</a></li></ul></div>
+      <div><h4>Install</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">macOS, Apple Silicon</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">macOS, Intel</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe">Windows</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage">Linux</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases">All releases</a></li></ul></div>
+      <div><h4>Project</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/issues" target="_blank" rel="noopener">Report an issue</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/blob/main/LICENSE" target="_blank" rel="noopener">License</a></li></ul></div>
     </div>
   </footer>
 
   <script>
-    // Tabs
     const tabs = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.panel');
     function select(name) {
@@ -349,21 +429,17 @@ brew install --cask buddyusage</pre>
     }
     tabs.forEach((t) => t.addEventListener('click', () => select(t.dataset.tab)));
 
-    // Detect the visitor's platform for the hero button and default tab.
     const ua = navigator.userAgent;
-    const platform = /Windows/i.test(ua) ? 'win' : /Linux/i.test(ua) && !/Android/i.test(ua) ? 'linux' : /Mac/i.test(ua) ? 'mac' : 'mac';
+    const platform = /Windows/i.test(ua) ? 'win' : /Linux/i.test(ua) && !/Android/i.test(ua) ? 'linux' : 'mac';
     select(platform);
-    const primary = document.getElementById('dl-primary');
     const labels = { mac: 'Download for Mac', win: 'Download for Windows', linux: 'Download for Linux' };
-    primary.textContent = labels[platform];
+    document.getElementById('dl-primary').textContent = labels[platform];
 
-    // Show the latest version number next to the CTA (best effort).
     fetch('https://api.github.com/repos/SmtTheSE/BuddyUsage/releases/latest')
       .then((r) => (r.ok ? r.json() : null))
       .then((rel) => {
         if (!rel) return;
-        const note = document.getElementById('cta-note');
-        note.innerHTML = `Latest release <strong>${rel.tag_name}</strong> · <a href="${rel.html_url}" target="_blank" rel="noopener">all downloads &amp; notes</a>`;
+        document.getElementById('cta-note').innerHTML = `Free and open source · macOS, Windows, Linux · Latest <a href="${rel.html_url}" target="_blank" rel="noopener">${rel.tag_name}</a>`;
       })
       .catch(() => {});
   </script>
