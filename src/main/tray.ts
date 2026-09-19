@@ -8,6 +8,9 @@ import { openSettingsWindow } from './windows/settingsWindow'
 import { providerRegistry } from './providers/registry'
 import { requestProviderLogin } from './scraping/scrapeRunner'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState } from './updates/updater'
+import { getAllSnapshots, onSnapshotUpdated } from './store/usageStore'
+import { getSettings } from './store/settings'
+import { primaryMetric } from '@shared/types'
 
 let tray: Tray | null = null
 
@@ -57,11 +60,28 @@ function buildMenu(): Menu {
   ])
 }
 
+/** Optional at-a-glance readout beside the icon: the highest usage across enabled providers. */
+export function refreshTrayTitle(): void {
+  if (!tray || process.platform !== 'darwin') return
+  const settings = getSettings()
+  if (!settings.menuBarUsage) {
+    tray.setTitle('')
+    return
+  }
+  const percents = getAllSnapshots()
+    .filter((s) => settings.enabledProviders[s.providerId] !== false && (s.status === 'ok' || s.status === 'stale'))
+    .map((s) => primaryMetric(s)?.percentUsed)
+    .filter((p): p is number => typeof p === 'number')
+  tray.setTitle(percents.length ? ` ${Math.max(...percents)}%` : '', { fontType: 'monospacedDigit' })
+}
+
 export function createTray(): Tray {
   tray = new Tray(buildTrayImage())
   tray.setToolTip('BuddyUsage')
   tray.setContextMenu(buildMenu())
   // Rebuild so the update item reflects the latest state when opened.
   onUpdateState(() => tray?.setContextMenu(buildMenu()))
+  onSnapshotUpdated(refreshTrayTitle)
+  refreshTrayTitle()
   return tray
 }

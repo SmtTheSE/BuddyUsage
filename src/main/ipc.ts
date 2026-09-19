@@ -7,6 +7,7 @@ import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
 import { getIslandWindow, repositionIslandWindow, setIgnoreMouse } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
+import { refreshTrayTitle } from './tray'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
 
 function broadcast(channel: string, payload: unknown): void {
@@ -22,6 +23,7 @@ export function applySettings(patch: Partial<AppSettings>): AppSettings {
   if (patch.launchAtLogin !== undefined) {
     app.setLoginItemSettings({ openAtLogin: next.launchAtLogin })
   }
+  refreshTrayTitle()
   broadcast(IpcChannel.SettingsUpdated, next)
   return next
 }

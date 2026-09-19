@@ -28,3 +28,15 @@ export function relativeSyncLabel(iso?: string): string {
 export function hasReadings(snapshot?: UsageSnapshot): boolean {
   return !!snapshot && (snapshot.status === 'ok' || snapshot.status === 'stale') && snapshot.metrics.length > 0
 }
+
+/** "in 48 min" / "in 3h 12m" / "Tue 11:07 PM" from an absolute reset time; undefined once it has passed. */
+export function formatUntil(iso?: string, now = Date.now()): string | undefined {
+  if (!iso) return undefined
+  const ms = new Date(iso).getTime() - now
+  if (!Number.isFinite(ms) || ms <= 0) return undefined
+  const minutes = Math.ceil(ms / 60000)
+  if (minutes < 60) return `in ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `in ${hours}h ${minutes % 60}m`
+  return new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+}

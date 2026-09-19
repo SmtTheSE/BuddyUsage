@@ -4,6 +4,7 @@ import type { UsageSnapshot } from '@shared/types'
 import { getProviderWindow } from './windowPool'
 import { getSnapshot, setSnapshot } from '../store/usageStore'
 import { findPlanLabel, findResetPhrase, looksFreeTier, looksSignedOut } from '../providers/parseHeuristics'
+import { parseResetLabel } from './resetTime'
 
 const PAGE_SETTLE_MS = 2000 // lets client-rendered SPA content paint before we read the DOM
 const LOGIN_POLL_MS = 1500
@@ -49,7 +50,12 @@ async function performScrape(
   // pitching an upgrade is more likely promo copy ("save 20%") than usage.
   const trustworthy = parsed && (parsed.metrics[0]?.id !== 'usage' || !looksFreeTier(raw))
   if (parsed && trustworthy) {
-    return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...parsed }
+    const now = new Date()
+    const metrics = parsed.metrics.map((m) => ({
+      ...m,
+      resetsAt: parseResetLabel(m.resetLabel, now)?.toISOString()
+    }))
+    return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...parsed, metrics }
   }
 
   // The URL-based isLoggedIn check above can miss providers that never

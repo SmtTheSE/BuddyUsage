@@ -28,6 +28,8 @@ export interface UsageMetric {
   unit?: string
   /** Human-readable reset phrase exactly as the page shows it ("in 51 min", "Thu 12:00 AM"). */
   resetLabel?: string
+  /** The same reset as an absolute ISO time, when the phrase could be parsed — lets the UI count down live. */
+  resetsAt?: string
 }
 
 export interface SyncState {
@@ -90,6 +92,10 @@ export interface AppSettings {
   displayId?: number
   /** Collapsed to a slim tab (hover to peek, click the handle to expand). */
   islandCollapsed: boolean
+  /** Show the highest usage percentage next to the menu-bar icon (macOS). */
+  menuBarUsage: boolean
+  /** The first-run hint has been dismissed. */
+  onboardingSeen: boolean
   launchAtLogin: boolean
   theme: ThemeMode
 }

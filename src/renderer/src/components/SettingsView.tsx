@@ -191,6 +191,17 @@ export function SettingsView(): JSX.Element | null {
         </div>
         <div className="row">
           <span className="row__main">
+            <span className="row__label">Usage in menu bar</span>
+            <span className="row__hint">Show the highest percentage next to the menu-bar icon.</span>
+          </span>
+          <Switch
+            checked={settings.menuBarUsage}
+            label="Show usage in menu bar"
+            onChange={(next) => void updateSettings({ menuBarUsage: next })}
+          />
+        </div>
+        <div className="row">
+          <span className="row__main">
             <span className="row__label">Collapsed</span>
             <span className="row__hint">Slim tab with status dots — hover to peek.</span>
           </span>

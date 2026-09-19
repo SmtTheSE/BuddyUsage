@@ -47,6 +47,8 @@ export function installDevMock(): void {
     edge: 'right',
     verticalOffset: 120,
     islandCollapsed: false,
+    menuBarUsage: false,
+    onboardingSeen: true,
     launchAtLogin: false,
     theme: 'auto'
   }

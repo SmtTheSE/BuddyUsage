@@ -13,6 +13,8 @@ function defaultSettings(): AppSettings {
     edge: 'right',
     verticalOffset: 120,
     islandCollapsed: false,
+    menuBarUsage: false,
+    onboardingSeen: false,
     launchAtLogin: false,
     theme: 'auto'
   }

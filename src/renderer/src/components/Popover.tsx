@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { ProviderMeta, ScreenEdge, UsageSnapshot } from '@shared/types'
 import { ProviderIcon } from './ProviderIcon'
-import { hasReadings, relativeSyncLabel, usageColor } from '../lib/usageColor'
+import { formatUntil, hasReadings, relativeSyncLabel, usageColor } from '../lib/usageColor'
 import { useAppStore } from '../state/store'
 import { UpdateBanner } from './UpdateBanner'
 
@@ -75,7 +75,14 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
           <div key={metric.id} className="metric">
             <div className="metric__row">
               <span className="metric__label">{metric.label}</span>
-              {metric.resetLabel && <span className="metric__reset">Resets {metric.resetLabel}</span>}
+              {(metric.resetsAt || metric.resetLabel) && (
+                <span
+                  className="metric__reset"
+                  title={metric.resetsAt ? new Date(metric.resetsAt).toLocaleString() : undefined}
+                >
+                  Resets {formatUntil(metric.resetsAt) ?? metric.resetLabel}
+                </span>
+              )}
             </div>
             <div className="metric__track">
               <motion.div

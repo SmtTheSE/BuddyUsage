@@ -149,8 +149,10 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 40px 0 46px; /* flare (22) + room for the handle below */
+  gap: 22px;
+  /* top: flare (22) + 18 breathing room; bottom: flare + a dedicated zone
+     for the grip so it never crowds the last ring's number. */
+  padding: 40px 0 74px;
 }
 
 .island__dots {
@@ -159,7 +161,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 44px 0 40px;
+  padding: 44px 0 52px;
 }
 
 .dot {
@@ -174,7 +176,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: none;
   border: none;
   padding: 0;
@@ -194,18 +196,31 @@ button {
   color: #fff;
 }
 
+.cell__label--state {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
 .island__handle {
   position: absolute;
   left: 50%;
-  bottom: 26px;
-  transform: translateX(-50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
+  bottom: 30px;
+  transform: translate(-50%, 4px);
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -213,27 +228,35 @@ button {
   cursor: pointer;
   opacity: 0;
   transition:
-    opacity 0.2s var(--ease-glass),
+    opacity 0.22s var(--ease-glass),
+    transform 0.22s var(--ease-glass),
     background 0.2s var(--ease-glass);
 }
 
 .island:hover .island__handle,
 .island--collapsed .island__handle {
   opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .island__handle:hover {
   background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.island__handle:active {
+  transform: translate(-50%, 0) scale(0.94);
 }
 
 .island__handle-icon {
   display: inline-block;
   transform-origin: center;
+  margin-top: -1px;
 }
 
 .island--collapsed .island__handle {
   bottom: 22px;
-  width: 18px;
+  width: 22px;
   height: 18px;
   font-size: 12px;
 }
@@ -331,6 +354,79 @@ button {
 /* A ring being re-fetched breathes gently instead of freezing or flashing. */
 .cell--syncing .ring__progress {
   animation: ring-breathe 1.4s ease-in-out infinite;
+}
+
+/* First sync: the track shimmers so "nothing yet" still feels alive. */
+.ring--loading .ring__track {
+  stroke: rgba(255, 255, 255, 0.22);
+  animation: ring-breathe 1.6s ease-in-out infinite;
+}
+
+.ring--loading .ring__icon {
+  opacity: 0.7;
+}
+
+/* ---------- First-run coach mark ---------- */
+
+.coach {
+  position: absolute;
+  top: 100px; /* aligned with the island's top */
+  width: 250px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner), var(--glass-shadow);
+  font-size: 12.5px;
+  line-height: 1.45;
+  pointer-events: auto;
+}
+
+.coach::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, var(--glass-edge-top), var(--glass-edge-bottom) 60%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.coach > * {
+  position: relative;
+}
+
+.island-root--right .coach {
+  right: calc(var(--island-width) + 18px);
+}
+
+.island-root--left .coach {
+  left: calc(var(--island-width) + 18px);
+}
+
+.coach__title {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.coach__list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coach__key {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* ---------- Popover ---------- */

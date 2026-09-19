@@ -7,6 +7,7 @@ import { Ring } from './Ring'
 import { ProviderIcon } from './ProviderIcon'
 import { Popover } from './Popover'
 import { CountUp } from './CountUp'
+import { CoachMark } from './CoachMark'
 import { hasReadings, usageColor, USAGE_COLORS } from '../lib/usageColor'
 
 const POPOVER_CLOSE_DELAY_MS = 260
@@ -14,12 +15,13 @@ const PEEK_CLOSE_DELAY_MS = 500
 const COLLAPSED_WIDTH = 34
 const SPRING = { type: 'spring', stiffness: 260, damping: 26, mass: 0.9 } as const
 
-function ringLabel(snapshot?: UsageSnapshot): JSX.Element | string {
-  if (!snapshot || snapshot.status === 'loading') return '…'
-  if (snapshot.status === 'logged_out') return 'Sign in'
-  if (snapshot.status === 'no_meter') return snapshot.planLabel ?? 'Free'
+/** A value ("73%") reads large; a state ("Sign in", "Free") reads as a quiet pill. */
+function ringLabel(snapshot?: UsageSnapshot): { node: JSX.Element | string; isState: boolean } {
+  if (!snapshot || snapshot.status === 'loading') return { node: '…', isState: true }
+  if (snapshot.status === 'logged_out') return { node: 'Sign in', isState: true }
+  if (snapshot.status === 'no_meter') return { node: snapshot.planLabel ?? 'Free', isState: true }
   const metric = primaryMetric(snapshot)
-  return metric ? <CountUp value={metric.percentUsed} suffix="%" /> : '—'
+  return metric ? { node: <CountUp value={metric.percentUsed} suffix="%" />, isState: false } : { node: '—', isState: true }
 }
 
 /**
@@ -52,6 +54,7 @@ export function Island(): JSX.Element {
   const edge = state.settings?.edge ?? 'right'
   const collapsed = state.settings?.islandCollapsed ?? false
   const updateReady = state.update?.status === 'available'
+  const showCoach = state.settings !== null && !state.settings.onboardingSeen && !collapsed
 
   const [hovered, setHovered] = useState<string | null>(null)
   const [pinned, setPinned] = useState<string | null>(null)
@@ -108,7 +111,10 @@ export function Island(): JSX.Element {
   const activeId = expanded ? (pinned ?? hovered) : null
   const active: ProviderMeta | undefined = providers.find((p) => p.id === activeId)
   const activeCell = activeId ? cellRefs.current.get(activeId) : undefined
-  const popoverTop = activeCell ? ISLAND_LAYOUT.islandInsetTop + activeCell.offsetTop + activeCell.offsetHeight / 2 : 0
+  // Centre the card on its ring, but keep it inside the window.
+  const POPOVER_HALF = 130
+  const rawTop = activeCell ? ISLAND_LAYOUT.islandInsetTop + activeCell.offsetTop + activeCell.offsetHeight / 2 : 0
+  const popoverTop = Math.min(Math.max(POPOVER_HALF + 8, rawTop), ISLAND_LAYOUT.windowHeight - POPOVER_HALF - 8)
 
   return (
     <div
@@ -119,7 +125,8 @@ export function Island(): JSX.Element {
         ref={bodyRef}
         className={expanded ? 'island' : 'island island--collapsed'}
         data-solid
-        animate={{ width: expanded ? ISLAND_LAYOUT.islandWidth : COLLAPSED_WIDTH }}
+        initial={{ x: edge === 'right' ? 80 : -80, opacity: 0 }}
+        animate={{ x: 0, opacity: 1, width: expanded ? ISLAND_LAYOUT.islandWidth : COLLAPSED_WIDTH }}
         transition={SPRING}
         onMouseEnter={onIslandEnter}
         onMouseLeave={onIslandLeave}
@@ -177,10 +184,21 @@ export function Island(): JSX.Element {
                     }}
                     aria-label={provider.name}
                   >
-                    <Ring percent={hasReadings(snapshot) ? metric?.percentUsed : 0} color={color}>
+                    <Ring
+                      percent={hasReadings(snapshot) ? metric?.percentUsed : 0}
+                      color={color}
+                      loading={!snapshot || snapshot.status === 'loading' || (syncing && !hasReadings(snapshot))}
+                    >
                       <ProviderIcon providerId={provider.id} name={provider.name} size={28} />
                     </Ring>
-                    <span className="cell__label">{ringLabel(snapshot)}</span>
+                    {(() => {
+                      const label = ringLabel(snapshot)
+                      return (
+                        <span className={label.isState ? 'cell__label cell__label--state' : 'cell__label'}>
+                          {label.node}
+                        </span>
+                      )
+                    })()}
                   </motion.button>
                 )
               })}
@@ -233,9 +251,11 @@ export function Island(): JSX.Element {
         </button>
       </motion.div>
 
+      <AnimatePresence>{showCoach && !active && <CoachMark key="coach" edge={edge} />}</AnimatePresence>
+
       <AnimatePresence>
         {active && (
-          <div key={active.id} className="popover-anchor" style={{ top: Math.max(8, popoverTop) }}>
+          <div key={active.id} className="popover-anchor" style={{ top: popoverTop }}>
             <Popover
               provider={active}
               snapshot={state.usageByProvider[active.id]}
