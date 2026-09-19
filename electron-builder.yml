@@ -3,7 +3,7 @@ productName: BuddyUsage
 # Stable names so "releases/latest/download/<name>" links never change:
 #   BuddyUsage-arm64.dmg / BuddyUsage-x64.dmg        (macOS)
 #   BuddyUsage-x64.exe   / BuddyUsage-arm64.exe      (Windows installer)
-#   BuddyUsage-x64.AppImage / BuddyUsage-arm64.AppImage (Linux)
+#   BuddyUsage-x86_64.AppImage / BuddyUsage-arm64.AppImage (Linux)
 artifactName: ${productName}-${arch}.${ext}
 directories:
   buildResources: build

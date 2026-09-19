@@ -33,7 +33,7 @@ irm https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.ps1 | iex
 | macOS · Intel | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg |
 | Windows · x64 (Intel/AMD) | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe |
 | Windows · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe |
-| Linux · x64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.AppImage |
+| Linux · x64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage |
 | Linux · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage |
 
 The builds are not code-signed:
@@ -43,7 +43,7 @@ The builds are not code-signed:
   `xattr -dr com.apple.quarantine /Applications/BuddyUsage.app`
 - **Windows** SmartScreen may show "Windows protected your PC" — choose
   *More info → Run anyway*.
-- **Linux**: `chmod +x BuddyUsage-x64.AppImage && ./BuddyUsage-x64.AppImage`.
+- **Linux**: `chmod +x BuddyUsage-x86_64.AppImage && ./BuddyUsage-x86_64.AppImage`.
   Transparency needs a compositing window manager; click-through on empty
   areas isn't available on Linux, so the island's transparent margin stays
   solid to the mouse.

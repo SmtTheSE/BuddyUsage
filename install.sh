@@ -9,8 +9,8 @@ APP="BuddyUsage"
 VERSION="${BUDDYUSAGE_VERSION:-latest}"
 
 case "$(uname -m)" in
-  arm64|aarch64) ARCH="arm64" ;;
-  x86_64|amd64) ARCH="x64" ;;
+  arm64|aarch64) ARCH="arm64"; LINUX_ARCH="arm64" ;;
+  x86_64|amd64) ARCH="x64"; LINUX_ARCH="x86_64" ;;
   *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
 
@@ -45,7 +45,7 @@ case "$(uname -s)" in
     DEST="${HOME}/.local/bin/$APP.AppImage"
     mkdir -p "$(dirname "$DEST")"
     echo "Downloading $APP ($ARCH, $VERSION)…"
-    curl -fL --progress-bar "$(asset_url "$APP-$ARCH.AppImage")" -o "$DEST"
+    curl -fL --progress-bar "$(asset_url "$APP-$LINUX_ARCH.AppImage")" -o "$DEST"
     chmod +x "$DEST"
     echo "Installed to $DEST (add ~/.local/bin to PATH if it isn't). Launching…"
     nohup "$DEST" >/dev/null 2>&1 &

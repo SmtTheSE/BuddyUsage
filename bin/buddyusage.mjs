@@ -137,7 +137,8 @@ async function download(url, dest) {
 function assetNameFor(os, arch) {
   if (os === 'darwin') return `${APP_NAME}-${arch}.dmg`
   if (os === 'win32') return `${APP_NAME}-${arch}.exe`
-  return `${APP_NAME}-${arch}.AppImage`
+  // electron-builder uses the Linux convention for the x64 AppImage name.
+  return `${APP_NAME}-${arch === 'x64' ? 'x86_64' : 'arm64'}.AppImage`
 }
 
 async function installMac(file) {
