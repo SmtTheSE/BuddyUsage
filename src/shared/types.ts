@@ -45,6 +45,29 @@ export interface UsageSnapshot {
   raw?: string // last raw extracted text, for debugging
 }
 
+export type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'up_to_date'
+  | 'available'
+  | 'downloading'
+  | 'installing'
+  | 'error'
+
+export interface UpdateState {
+  status: UpdateStatus
+  currentVersion: string
+  latestVersion?: string
+  releaseUrl?: string
+  downloadUrl?: string
+  downloadSize?: number
+  notes?: string
+  /** 0–100 while downloading. */
+  progress?: number
+  error?: string
+  checkedAt?: string
+}
+
 export interface ProviderMeta {
   id: ProviderId
   name: string
@@ -113,5 +136,10 @@ export const IpcChannel = {
   WindowSetIgnoreMouse: 'window:setIgnoreMouse',
   WindowShowContextMenu: 'window:showContextMenu',
   WindowOpenSettings: 'window:openSettings',
-  AppQuit: 'app:quit'
+  AppQuit: 'app:quit',
+  UpdateGetState: 'update:getState',
+  UpdateCheck: 'update:check',
+  UpdateInstall: 'update:install',
+  UpdateOpenDownload: 'update:openDownload',
+  UpdateState: 'update:state'
 } as const

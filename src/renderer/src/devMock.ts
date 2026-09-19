@@ -67,6 +67,18 @@ export function installDevMock(): void {
     quit: noop,
     onUsageUpdated: () => () => undefined,
     onSettingsUpdated: () => () => undefined,
-    onSyncStateChanged: () => () => undefined
+    onSyncStateChanged: () => () => undefined,
+    getUpdateState: async () => ({
+      status: 'available',
+      currentVersion: '0.2.5',
+      latestVersion: '0.3.0',
+      releaseUrl: 'https://github.com/SmtTheSE/BuddyUsage/releases/latest',
+      downloadUrl: 'https://example.invalid',
+      downloadSize: 100_000_000
+    }),
+    checkForUpdates: async () => ({ status: 'up_to_date', currentVersion: '0.2.5', latestVersion: '0.2.5' }),
+    installUpdate: async () => ({ status: 'downloading', currentVersion: '0.2.5', latestVersion: '0.3.0', progress: 42 }),
+    openDownloadPage: noop,
+    onUpdateState: () => () => undefined
   }
 }

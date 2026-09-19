@@ -10,6 +10,7 @@ import { useAppStore } from '../state/store'
 import { ProviderIcon } from './ProviderIcon'
 import { Switch } from './Switch'
 import { relativeSyncLabel } from '../lib/usageColor'
+import { UpdateBanner } from './UpdateBanner'
 
 const INTERVAL_OPTIONS = [1, 2, 3, 5, 10, 15, 30, 60].filter(
   (m) => m >= MIN_REFRESH_INTERVAL_MINUTES && m <= MAX_REFRESH_INTERVAL_MINUTES
@@ -230,6 +231,19 @@ export function SettingsView(): JSX.Element | null {
             onChange={(theme) => void updateSettings({ theme })}
           />
         </div>
+      </motion.section>
+
+      <motion.section
+        className="card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SECTION_SPRING, delay: 0.14 }}
+      >
+        <h2 className="card__title">Updates</h2>
+        <UpdateBanner />
+        <p className="row__hint" style={{ padding: '0 0 8px' }}>
+          Checked automatically every few hours. Updates install in place and restart the app.
+        </p>
       </motion.section>
 
       <footer className="settings__footer">

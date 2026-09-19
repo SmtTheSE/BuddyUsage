@@ -51,6 +51,7 @@ export function Island(): JSX.Element {
   const providers = selectEnabledProviders(state)
   const edge = state.settings?.edge ?? 'right'
   const collapsed = state.settings?.islandCollapsed ?? false
+  const updateReady = state.update?.status === 'available'
 
   const [hovered, setHovered] = useState<string | null>(null)
   const [pinned, setPinned] = useState<string | null>(null)
@@ -204,6 +205,17 @@ export function Island(): JSX.Element {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {updateReady && (
+          <motion.span
+            className="island__badge"
+            data-solid
+            title={`Update to ${state.update?.latestVersion} available`}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={SPRING}
+          />
+        )}
 
         <button
           className="island__handle"

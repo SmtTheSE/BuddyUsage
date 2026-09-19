@@ -4,6 +4,7 @@ import type { ProviderMeta, ScreenEdge, UsageSnapshot } from '@shared/types'
 import { ProviderIcon } from './ProviderIcon'
 import { hasReadings, relativeSyncLabel, usageColor } from '../lib/usageColor'
 import { useAppStore } from '../state/store'
+import { UpdateBanner } from './UpdateBanner'
 
 interface PopoverProps {
   provider: ProviderMeta
@@ -129,6 +130,8 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
           <p>Waiting for first sync…</p>
         </div>
       )}
+
+      <UpdateBanner compact />
 
       <div className="popover__footer">
         <span

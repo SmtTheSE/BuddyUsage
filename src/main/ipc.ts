@@ -7,6 +7,7 @@ import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
 import { getIslandWindow, repositionIslandWindow, setIgnoreMouse } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
+import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
 
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -67,6 +68,11 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IpcChannel.AppQuit, () => app.quit())
 
+  ipcMain.handle(IpcChannel.UpdateGetState, () => getUpdateState())
+  ipcMain.handle(IpcChannel.UpdateCheck, () => checkForUpdates())
+  ipcMain.handle(IpcChannel.UpdateInstall, () => installUpdate())
+  ipcMain.handle(IpcChannel.UpdateOpenDownload, () => openDownloadPage())
+
   // Right-click on a ring: the island has no chrome of its own, so this is
   // where sign-in / refresh / dashboard / settings / quit live.
   ipcMain.handle(IpcChannel.WindowShowContextMenu, (_event, providerId?: string) => {
@@ -78,6 +84,14 @@ export function registerIpcHandlers(): void {
         { label: `Refresh ${provider.name}`, click: () => void refreshProviderNow(provider.id) },
         { label: `Sign in to ${provider.name}…`, click: () => void requestProviderLogin(provider) },
         { label: `Open ${provider.name} dashboard`, click: () => void shell.openExternal(provider.usageUrl) },
+        { type: 'separator' }
+      )
+    }
+
+    const update = getUpdateState()
+    if (update.status === 'available') {
+      template.push(
+        { label: `Update to ${update.latestVersion}…`, click: () => void installUpdate() },
         { type: 'separator' }
       )
     }
@@ -96,4 +110,5 @@ export function registerIpcHandlers(): void {
   // Push snapshot updates to every renderer as they land, instead of polling.
   onSnapshotUpdated((snapshot) => broadcast(IpcChannel.UsageUpdated, snapshot))
   onSyncStateChanged((state) => broadcast(IpcChannel.UsageSyncState, state))
+  onUpdateState((state) => broadcast(IpcChannel.UpdateState, state))
 }

@@ -104,6 +104,18 @@ honest states rather than errors:
 | **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
 | **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
 
+## Updates
+
+BuddyUsage checks GitHub Releases on launch and every few hours. When a
+new version exists you get a system notification, a blue dot on the island,
+an **Update** button in every card, and **Update to x.y.z…** in the menu-bar
+menu. One click downloads the right build for your machine and installs it
+in place — the app restarts on the new version. No terminal, no hunting for
+files; a **Download ↗** link to the release page is always there as a fallback.
+
+This is built in rather than using Electron's stock auto-updater because
+that one refuses to install on macOS without a Developer ID signature.
+
 ## Staying current without clicking Refresh
 
 The gauges are meant to be glanced at, not poked. Every sync path funnels

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannel } from '@shared/types'
-import type { AppSettings, ProviderMeta, SyncState, UsageSnapshot } from '@shared/types'
+import type { AppSettings, ProviderMeta, SyncState, UpdateState, UsageSnapshot } from '@shared/types'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): () => void {
   const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
@@ -32,6 +32,12 @@ const api = {
     ipcRenderer.invoke(IpcChannel.WindowShowContextMenu, providerId),
   openSettings: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowOpenSettings),
   quit: (): Promise<void> => ipcRenderer.invoke(IpcChannel.AppQuit),
+  getUpdateState: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannel.UpdateGetState),
+  checkForUpdates: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannel.UpdateCheck),
+  installUpdate: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannel.UpdateInstall),
+  openDownloadPage: (): Promise<void> => ipcRenderer.invoke(IpcChannel.UpdateOpenDownload),
+  onUpdateState: (callback: (state: UpdateState) => void): (() => void) =>
+    subscribe(IpcChannel.UpdateState, callback),
   onUsageUpdated: (callback: (snapshot: UsageSnapshot) => void): (() => void) =>
     subscribe(IpcChannel.UsageUpdated, callback),
   onSettingsUpdated: (callback: (settings: AppSettings) => void): (() => void) =>

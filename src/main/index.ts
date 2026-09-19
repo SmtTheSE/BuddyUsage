@@ -7,6 +7,7 @@ import { startScrapeScheduler, stopScrapeScheduler } from './scraping/scheduler'
 import { destroyAllProviderWindows } from './scraping/windowPool'
 import { getSettings } from './store/settings'
 import { CHROME_USER_AGENT } from './scraping/browserIdentity'
+import { startUpdateChecks } from './updates/updater'
 
 // Default UA for every session, so nothing anywhere advertises "Electron".
 app.userAgentFallback = CHROME_USER_AGENT
@@ -41,6 +42,7 @@ if (!gotLock) {
     createIslandWindow(applySettings)
     createTray()
     startScrapeScheduler()
+    if (app.isPackaged) startUpdateChecks()
 
     app.on('activate', () => {
       const island = getIslandWindow()

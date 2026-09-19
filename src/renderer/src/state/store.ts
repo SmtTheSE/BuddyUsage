@@ -1,11 +1,12 @@
 import { create } from 'zustand'
-import type { AppSettings, ProviderMeta, UsageSnapshot } from '@shared/types'
+import type { AppSettings, ProviderMeta, UpdateState, UsageSnapshot } from '@shared/types'
 
 interface AppState {
   providers: ProviderMeta[]
   usageByProvider: Record<string, UsageSnapshot>
   settings: AppSettings | null
   syncing: Record<string, boolean>
+  update: UpdateState | null
   init: () => Promise<void>
   refresh: (providerId?: string) => Promise<void>
   openLogin: (providerId: string) => Promise<void>
@@ -18,18 +19,21 @@ export const useAppStore = create<AppState>((set) => ({
   usageByProvider: {},
   settings: null,
   syncing: {},
+  update: null,
 
   init: async () => {
-    const [providers, snapshots, settings, syncing] = await Promise.all([
+    const [providers, snapshots, settings, syncing, update] = await Promise.all([
       window.buddyUsage.listProviders(),
       window.buddyUsage.getAllUsage(),
       window.buddyUsage.getSettings(),
-      window.buddyUsage.getSyncState()
+      window.buddyUsage.getSyncState(),
+      window.buddyUsage.getUpdateState()
     ])
     set({
       providers,
       settings,
       syncing,
+      update,
       usageByProvider: Object.fromEntries(snapshots.map((s) => [s.providerId, s]))
     })
     window.buddyUsage.onUsageUpdated((snapshot) => {
@@ -41,6 +45,7 @@ export const useAppStore = create<AppState>((set) => ({
     window.buddyUsage.onSyncStateChanged(({ providerId, syncing }) =>
       set((state) => ({ syncing: { ...state.syncing, [providerId]: syncing } }))
     )
+    window.buddyUsage.onUpdateState((update) => set({ update }))
   },
 
   refresh: async (providerId) => {

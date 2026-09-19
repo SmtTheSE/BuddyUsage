@@ -7,6 +7,7 @@ import { getIslandWindow } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
 import { providerRegistry } from './providers/registry'
 import { requestProviderLogin } from './scraping/scrapeRunner'
+import { checkForUpdates, getUpdateState, installUpdate, onUpdateState } from './updates/updater'
 
 let tray: Tray | null = null
 
@@ -27,11 +28,16 @@ function buildTrayImage(): Electron.NativeImage {
  * The island has no titlebar/dock presence (by design), so the tray is the
  * always-available way to reach settings, sign-in, refresh and quit.
  */
-export function createTray(): Tray {
-  tray = new Tray(buildTrayImage())
-  tray.setToolTip('BuddyUsage')
+function buildMenu(): Menu {
+  const update = getUpdateState()
+  const updateItem: Electron.MenuItemConstructorOptions =
+    update.status === 'available'
+      ? { label: `Update to ${update.latestVersion}…`, click: () => void installUpdate() }
+      : update.status === 'downloading'
+        ? { label: `Downloading update… ${update.progress ?? 0}%`, enabled: false }
+        : { label: 'Check for Updates…', click: () => void checkForUpdates({ notify: true }) }
 
-  const menu = Menu.buildFromTemplate([
+  return Menu.buildFromTemplate([
     { label: 'Refresh All', click: () => void refreshProviderNow() },
     {
       label: 'Sign in',
@@ -44,8 +50,18 @@ export function createTray(): Tray {
     { label: 'Show Island', click: () => getIslandWindow()?.show() },
     { label: 'Settings…', click: () => openSettingsWindow() },
     { type: 'separator' },
+    updateItem,
+    { label: `Version ${app.getVersion()}`, enabled: false },
+    { type: 'separator' },
     { label: 'Quit BuddyUsage', click: () => app.quit() }
   ])
-  tray.setContextMenu(menu)
+}
+
+export function createTray(): Tray {
+  tray = new Tray(buildTrayImage())
+  tray.setToolTip('BuddyUsage')
+  tray.setContextMenu(buildMenu())
+  // Rebuild so the update item reflects the latest state when opened.
+  onUpdateState(() => tray?.setContextMenu(buildMenu()))
   return tray
 }

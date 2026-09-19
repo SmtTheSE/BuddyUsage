@@ -238,6 +238,60 @@ button {
   font-size: 12px;
 }
 
+/* Update available: a small accent dot on the island's top edge. */
+.island__badge {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: sync-pulse 2s ease-in-out infinite;
+}
+
+.update-banner--compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.update-banner--compact > span:not(.update-banner__dot) {
+  flex: 1;
+}
+
+.update-banner__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  flex-shrink: 0;
+}
+
+.update-card__track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bar-track);
+  overflow: hidden;
+  margin: 0 0 10px;
+}
+
+.update-card__fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
 /* ---------- Ring ---------- */
 
 .ring {
