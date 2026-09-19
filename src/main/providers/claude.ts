@@ -23,6 +23,8 @@ export const claudeProvider: ProviderDefinition = {
   sessionPartition: 'persist:claude',
   metrics,
   activityPaths: ['.claude/projects'],
+  freeTierNote:
+    'Claude shows usage percentages on Pro, Max and Team plans. On the Free plan the app tells you when you reach the limit and when it resets.',
   isLoggedIn: defaultIsLoggedIn,
   extractRaw: defaultExtractRaw,
   parse: (raw) => parseUsageText(raw, metrics)

@@ -32,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh
 
    On older macOS versions, right-click (or Control-click) BuddyUsage in Applications and choose **Open**, then **Open** again.
 
-BuddyUsage runs as a small island on the right edge of your screen plus an icon in the menu bar. Click a ring → **Sign in** to connect each assistant.
+BuddyUsage runs as a small glass island on the edge of your screen (drag it anywhere — it snaps to the nearest edge) plus an icon in the menu bar. Click a ring → **Sign in** to connect each assistant. Free plans are supported: where a provider publishes no meter, the card says so instead of showing an error.
 
 ## Install on Windows
 

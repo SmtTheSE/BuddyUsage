@@ -3,7 +3,7 @@ import type { ProviderDefinition } from '../providers/types'
 import type { UsageSnapshot } from '@shared/types'
 import { getProviderWindow } from './windowPool'
 import { getSnapshot, setSnapshot } from '../store/usageStore'
-import { looksSignedOut } from '../providers/parseHeuristics'
+import { findPlanLabel, findResetPhrase, looksFreeTier, looksSignedOut } from '../providers/parseHeuristics'
 
 const PAGE_SETTLE_MS = 2000 // lets client-rendered SPA content paint before we read the DOM
 const LOGIN_POLL_MS = 1500
@@ -45,7 +45,10 @@ async function performScrape(
   const raw = await provider.extractRaw(win.webContents)
   const parsed = provider.parse(raw)
 
-  if (parsed) {
+  // A labelled meter is trustworthy; a bare percentage on a page that is
+  // pitching an upgrade is more likely promo copy ("save 20%") than usage.
+  const trustworthy = parsed && (parsed.metrics[0]?.id !== 'usage' || !looksFreeTier(raw))
+  if (parsed && trustworthy) {
     return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...parsed }
   }
 
@@ -55,6 +58,21 @@ async function performScrape(
   // "sign in required" instead of a generic parse error.
   if (previous?.status !== 'ok' && looksSignedOut(raw)) {
     return { providerId: provider.id, status: 'logged_out', message: 'Sign in required', metrics: [], lastSyncedAt: nowIso }
+  }
+
+  // Signed in, but the plan publishes no meter (Free on Claude/ChatGPT):
+  // say so plainly, and surface a reset time if the page mentions one.
+  if (looksFreeTier(raw)) {
+    const reset = findResetPhrase(raw)
+    return {
+      providerId: provider.id,
+      status: 'no_meter',
+      planLabel: findPlanLabel(raw) ?? 'Free',
+      message: reset ? `${provider.freeTierNote} Limit resets ${reset}.` : provider.freeTierNote,
+      metrics: [],
+      raw: raw.slice(0, 800),
+      lastSyncedAt: nowIso
+    }
   }
 
   return {

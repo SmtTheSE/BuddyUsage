@@ -18,6 +18,8 @@ export interface ProviderDefinition {
   sessionPartition: string
   /** The limit windows this provider's page is expected to show, in display order. */
   metrics: MetricSpec[]
+  /** Shown when the account is signed in but its plan publishes no usage meter (typically Free). */
+  freeTierNote: string
   /**
    * Local directories the provider's CLI writes to while in use, relative
    * to the home directory. Activity there triggers a fresh sync shortly

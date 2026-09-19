@@ -106,6 +106,15 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
         </div>
       )}
 
+      {status === 'no_meter' && (
+        <div className="popover__state popover__state--column">
+          <p>{snapshot?.message}</p>
+          <button className="button button--small button--tinted" onClick={() => void openDashboard(provider.id)}>
+            See plans ↗
+          </button>
+        </div>
+      )}
+
       {status === 'error' && (
         <div className="popover__state">
           <p className="popover__error">{snapshot?.message ?? 'Could not load usage.'}</p>

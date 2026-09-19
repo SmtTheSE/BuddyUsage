@@ -8,7 +8,7 @@ import type { AppSettings, ProviderMeta, UsageSnapshot } from '@shared/types'
 export function installDevMock(): void {
   const providers: ProviderMeta[] = [
     { id: 'claude', name: 'Claude', color: '#D97757', usageUrl: 'https://claude.ai/settings/usage' },
-    { id: 'codex', name: 'Codex', color: '#10A37F', usageUrl: 'https://chatgpt.com/codex/settings/usage' },
+    { id: 'chatgpt', name: 'ChatGPT', color: '#10A37F', usageUrl: 'https://chatgpt.com/codex/settings/usage' },
     { id: 'gemini', name: 'Gemini', color: '#4285F4', usageUrl: 'https://gemini.google.com/app' }
   ]
   const now = new Date().toISOString()
@@ -24,7 +24,7 @@ export function installDevMock(): void {
       ]
     },
     {
-      providerId: 'codex',
+      providerId: 'chatgpt',
       status: 'ok',
       lastSyncedAt: now,
       metrics: [
@@ -43,7 +43,7 @@ export function installDevMock(): void {
   let settings: AppSettings = {
     schemaVersion: 2,
     refreshIntervalMinutes: 10,
-    enabledProviders: { claude: true, codex: true, gemini: true },
+    enabledProviders: { claude: true, chatgpt: true, gemini: true },
     edge: 'right',
     verticalOffset: 120,
     islandCollapsed: false,

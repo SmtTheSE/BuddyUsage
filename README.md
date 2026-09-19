@@ -1,7 +1,7 @@
 # BuddyUsage
 
 A small island, docked to the edge of your screen, that shows how much
-of your **Claude Code**, **Codex CLI** and **Gemini CLI** plan you've used —
+of your **Claude**, **ChatGPT / Codex** and **Gemini** plan you've used —
 without alt-tabbing into each provider's website.
 
 One ring per assistant, coloured by how close you are to the limit. Hover a
@@ -89,6 +89,20 @@ buddyusage open       # launch the app
 Click a ring → **Sign in** (or use the menu-bar icon → Sign in). A real
 browser window opens on that provider's own login page. Sessions are kept
 in an isolated, persistent partition per provider, so you do this once.
+
+Drag the island anywhere — it snaps to the nearest screen edge and remembers
+the spot. Hover it for the `›` handle to collapse it into a slim tab.
+
+## What each plan can show
+
+BuddyUsage reads exactly what each provider publishes, so free plans see
+honest states rather than errors:
+
+| Provider | Paid plans | Free plan |
+| --- | --- | --- |
+| **Claude** (claude.ai → Settings → Usage) | Current session + weekly limits with reset times | Anthropic publishes no percentages; the ring shows **Free** and the card explains — the app tells you when you hit the limit |
+| **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
+| **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
 
 ## Staying current without clicking Refresh
 

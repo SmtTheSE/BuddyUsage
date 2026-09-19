@@ -12,6 +12,7 @@ export type UsageStatus =
   | 'stale' // last fetch failed, showing a previous good snapshot
   | 'error' // fetch/parse failed and there is no previous snapshot
   | 'logged_out' // provider page requires sign-in
+  | 'no_meter' // signed in, but this plan (typically Free) publishes no usage meter
 
 /**
  * One limit window on a provider's usage page, e.g. "Current session" or

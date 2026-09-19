@@ -17,6 +17,7 @@ const SPRING = { type: 'spring', stiffness: 260, damping: 26, mass: 0.9 } as con
 function ringLabel(snapshot?: UsageSnapshot): JSX.Element | string {
   if (!snapshot || snapshot.status === 'loading') return '…'
   if (snapshot.status === 'logged_out') return 'Sign in'
+  if (snapshot.status === 'no_meter') return snapshot.planLabel ?? 'Free'
   const metric = primaryMetric(snapshot)
   return metric ? <CountUp value={metric.percentUsed} suffix="%" /> : '—'
 }

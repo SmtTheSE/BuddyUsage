@@ -1,7 +1,7 @@
 import Store from 'electron-store'
 import type { ProviderId, UsageSnapshot } from '@shared/types'
 
-const CURRENT_SCHEMA_VERSION = 2
+const CURRENT_SCHEMA_VERSION = 3
 
 interface UsageCacheShape {
   schemaVersion: number

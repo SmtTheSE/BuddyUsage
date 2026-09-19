@@ -81,8 +81,10 @@ export function SettingsView(): JSX.Element | null {
           const status =
             snapshot?.status === 'logged_out'
               ? 'Not signed in'
-              : snapshot?.status === 'error'
-                ? 'Needs attention'
+              : snapshot?.status === 'no_meter'
+                ? `${snapshot.planLabel ?? 'Free'} plan · no meter`
+                : snapshot?.status === 'error'
+                  ? 'Needs attention'
                 : syncing[provider.id]
                   ? 'Updating…'
                   : relativeSyncLabel(snapshot?.lastSyncedAt)

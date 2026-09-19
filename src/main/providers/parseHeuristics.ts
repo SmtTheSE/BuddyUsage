@@ -24,7 +24,19 @@ export interface MetricSpec {
   displayLabel: string
 }
 
-const KNOWN_PLAN_WORDS = ['Enterprise', 'Business', 'Team', 'Max', 'Pro', 'Plus', 'Free']
+// Ordered most-specific first; "Go" only counts next to plan wording since
+// it's an everyday word.
+const KNOWN_PLANS: { label: string; pattern: RegExp }[] = [
+  { label: 'Enterprise', pattern: /\bEnterprise\b/i },
+  { label: 'Business', pattern: /\bBusiness\b/i },
+  { label: 'Team', pattern: /\bTeam\b/i },
+  { label: 'Ultra', pattern: /\bUltra\b/i },
+  { label: 'Max', pattern: /\bMax\b/i },
+  { label: 'Pro', pattern: /\bPro\b/i },
+  { label: 'Plus', pattern: /\bPlus\b/i },
+  { label: 'Go', pattern: /\b(?:ChatGPT\s+)?Go\b(?=\s*(?:plan|subscription))/i },
+  { label: 'Free', pattern: /\bFree\b(?!\s*(?:trial|messages?\s+until))/i }
+]
 
 /** Matches "12 of 50 messages", "12/50 requests", "12 out of 50". */
 const FRACTION_PATTERN = /([\d,.]+)\s*(?:\/|of|out of)\s*([\d,.]+)\s*([a-zA-Z%]+)?/i
@@ -51,10 +63,19 @@ function escapeRegExp(value: string): string {
 }
 
 export function findPlanLabel(text: string): string | undefined {
-  for (const word of KNOWN_PLAN_WORDS) {
-    if (new RegExp(`\\b${word}\\b`, 'i').test(text)) return word
-  }
-  return undefined
+  return KNOWN_PLANS.find((plan) => plan.pattern.test(text))?.label
+}
+
+/**
+ * A signed-in page that offers an upgrade instead of a meter — what free
+ * plans see on Claude and ChatGPT. Lets the UI say "Free plan, no meter"
+ * rather than "couldn't read usage".
+ */
+const FREE_TIER_PATTERN =
+  /\b(?:upgrade to (?:pro|plus|max|go|premium)|free plan|current plan:?\s*free|you(?:'re| are) on (?:the )?free)\b/i
+
+export function looksFreeTier(text: string): boolean {
+  return FREE_TIER_PATTERN.test(text)
 }
 
 export function findFraction(

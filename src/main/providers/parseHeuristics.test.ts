@@ -5,6 +5,7 @@ import {
   findPercent,
   findPlanLabel,
   findResetPhrase,
+  looksFreeTier,
   looksSignedOut,
   parseUsageText,
   type MetricSpec
@@ -79,6 +80,27 @@ describe('findPlanLabel', () => {
 
   it('returns undefined for unknown plan wording', () => {
     expect(findPlanLabel('Some custom internal tier')).toBeUndefined()
+  })
+
+  it('only reads "Go" as a plan next to plan wording', () => {
+    expect(findPlanLabel('Go to settings')).toBeUndefined()
+    expect(findPlanLabel('ChatGPT Go plan')).toBe('Go')
+  })
+
+  it('ignores "free" in trial/limit phrasing', () => {
+    expect(findPlanLabel('Start a free trial')).toBeUndefined()
+    expect(findPlanLabel('Current plan: Free')).toBe('Free')
+  })
+})
+
+describe('looksFreeTier', () => {
+  it('recognises upgrade-only pages', () => {
+    expect(looksFreeTier('Usage\nUpgrade to Pro to see detailed usage.')).toBe(true)
+    expect(looksFreeTier("You're on the Free plan.")).toBe(true)
+  })
+
+  it('does not flag paid pages that show a meter', () => {
+    expect(looksFreeTier('Pro plan\nCurrent session\n40% used')).toBe(false)
   })
 })
 

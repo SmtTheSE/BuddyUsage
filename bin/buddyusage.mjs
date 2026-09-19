@@ -76,10 +76,14 @@ function status(args) {
     return
   }
   for (const snap of snapshots) {
-    const name = snap.providerId.charAt(0).toUpperCase() + snap.providerId.slice(1)
+    const name = snap.providerId === 'chatgpt' ? 'ChatGPT' : snap.providerId.charAt(0).toUpperCase() + snap.providerId.slice(1)
     const synced = color.dim(`synced ${relative(snap.lastSyncedAt)}`)
     if (snap.status === 'logged_out') {
       console.log(`${color.bold(name.padEnd(8))} ${color.dim('sign in required')}  ${synced}`)
+      continue
+    }
+    if (snap.status === 'no_meter') {
+      console.log(`${color.bold(name.padEnd(8))} ${color.dim(`${snap.planLabel ?? 'Free'} plan · no usage meter published`)}  ${synced}`)
       continue
     }
     if (snap.status === 'error' || !snap.metrics?.length) {

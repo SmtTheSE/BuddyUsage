@@ -19,7 +19,7 @@ const GEMINI_PATH =
 
 const MARKS: Record<string, string> = {
   claude: CLAUDE_PATH,
-  codex: OPENAI_PATH,
+  chatgpt: OPENAI_PATH,
   gemini: GEMINI_PATH
 }
 

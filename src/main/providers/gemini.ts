@@ -60,6 +60,7 @@ export const geminiProvider: ProviderDefinition = {
   sessionPartition: 'persist:gemini',
   metrics,
   activityPaths: ['.gemini/tmp'],
+  freeTierNote: 'Gemini publishes usage limits for every plan, including free. If nothing shows, open the Gemini app once and try Refresh.',
   isLoggedIn: geminiIsLoggedIn,
   extractRaw: async (contents) => {
     await wait(1500)
