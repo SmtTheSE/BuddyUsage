@@ -36,17 +36,12 @@ irm https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.ps1 | iex
 | Linux · x64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage |
 | Linux · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage |
 
-The builds are not code-signed:
-
-- **macOS** calls the app "damaged" on first launch unless the quarantine
-  flag is removed. The installer does it; by hand:
-  `xattr -dr com.apple.quarantine /Applications/BuddyUsage.app`
-- **Windows** SmartScreen may show "Windows protected your PC" — choose
-  *More info → Run anyway*.
-- **Linux**: `chmod +x BuddyUsage-x86_64.AppImage && ./BuddyUsage-x86_64.AppImage`.
-  Transparency needs a compositing window manager; click-through on empty
-  areas isn't available on Linux, so the island's transparent margin stays
-  solid to the mouse.
+**First launch on a Mac.** If macOS says it *"could not verify"* the app,
+open **System Settings → Privacy & Security** and click **Open Anyway**
+(older macOS: right-click the app → Open). Once. Windows may show
+*"Windows protected your PC"* → **More info → Run anyway**. These prompts
+disappear entirely on builds signed with a Developer ID / code-signing
+certificate — see [Signed releases](#signed-releases-no-security-prompts).
 
 **CLI** (reads the same data the app collects, works even when the app isn't running):
 
@@ -125,13 +120,35 @@ is running to iterate on the UI with mock data (no Electron needed).
 
 ### Releasing
 
-Push a tag and GitHub Actions builds macOS, Windows and Linux (x64 + ARM64) and attaches them to
-a GitHub Release, which is what the install links above point at:
+Push a tag and GitHub Actions builds macOS, Windows and Linux (x64 + ARM64)
+and attaches them to a GitHub Release, which is what the install links above
+point at. The release page gets plain-language install steps from
+`.github/release-notes.md`.
 
 ```bash
 npm version patch   # bumps package.json + creates the tag
 git push --follow-tags
 ```
+
+### Signed releases (no security prompts)
+
+Apple and Microsoft only let an app open with zero warnings if it's signed
+by a registered developer — there is no workaround for end users. The
+pipeline is already wired for it; add these repository secrets
+(**Settings → Secrets and variables → Actions**) and the next tagged release
+is signed and notarized automatically:
+
+| Secret | What it is |
+| --- | --- |
+| `CSC_LINK` | Base64 of a **Developer ID Application** `.p12` exported from Keychain (`base64 -i cert.p12 \| pbcopy`) — needs an [Apple Developer Program](https://developer.apple.com/programs/) membership |
+| `CSC_KEY_PASSWORD` | The `.p12` password |
+| `APPLE_ID` | The Apple ID of the developer account |
+| `APPLE_APP_SPECIFIC_PASSWORD` | An [app-specific password](https://support.apple.com/102654) for that Apple ID |
+| `APPLE_TEAM_ID` | The 10-character team ID from the developer account |
+| `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD` | Base64 `.pfx` code-signing certificate + password (Windows, optional) |
+
+Without these, macOS builds are ad-hoc signed (valid but unverified → one
+"Open Anyway" prompt) and Windows builds are unsigned (one SmartScreen prompt).
 
 ### Adding a provider
 
@@ -147,8 +164,8 @@ git push --follow-tags
   parsing can fail; the popover then shows a clear message and the last
   extracted text is kept in the cache (`buddyusage --json`) to make fixing
   the label list quick.
-- **Unsigned build.** See the quarantine note above. Set `identity`/notarize
-  in `electron-builder.yml` if you have a Developer ID.
+- **Security prompt on first launch** until the release is signed — see
+  [Signed releases](#signed-releases-no-security-prompts).
 - **Best tested on macOS.** Windows and Linux builds ship from the same
   code; the island docks to the edge of the primary display's work area on
   every platform, but Linux transparency/click-through depends on the

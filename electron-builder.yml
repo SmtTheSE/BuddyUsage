@@ -20,19 +20,22 @@ mac:
     - target: zip
       arch: [arm64, x64]
   icon: build/icon.png
-  # No Apple Developer ID is configured, so the app ships unsigned and
-  # un-notarized; install.sh strips the quarantine flag. Set these to your
-  # identity/team to produce a signed build.
-  identity: null
-  notarize: false
-  hardenedRuntime: false
+  # Signing/notarization is driven entirely by environment:
+  #   CSC_LINK + CSC_KEY_PASSWORD            → Developer ID .p12 (signs)
+  #   APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD
+  #     + APPLE_TEAM_ID                      → notarizes (zero Gatekeeper prompts)
+  # With none of these set, build/afterPack.cjs ad-hoc signs so the bundle
+  # at least has a valid seal (users get "Open Anyway" rather than "damaged").
+  hardenedRuntime: true
   gatekeeperAssess: false
+  notarize: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     LSUIElement: true
 dmg:
   sign: false
+afterPack: build/afterPack.cjs
 
 win:
   target:
