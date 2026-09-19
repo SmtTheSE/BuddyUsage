@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannel } from '@shared/types'
-import type { AppSettings, ProviderMeta, UsageSnapshot } from '@shared/types'
+import type { AppSettings, ProviderMeta, SyncState, UsageSnapshot } from '@shared/types'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): () => void {
   const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
@@ -16,6 +16,7 @@ function subscribe<T>(channel: string, callback: (payload: T) => void): () => vo
 const api = {
   listProviders: (): Promise<ProviderMeta[]> => ipcRenderer.invoke(IpcChannel.ProvidersList),
   getAllUsage: (): Promise<UsageSnapshot[]> => ipcRenderer.invoke(IpcChannel.UsageGetAll),
+  getSyncState: (): Promise<Record<string, boolean>> => ipcRenderer.invoke(IpcChannel.UsageSyncState),
   refreshUsage: (providerId?: string): Promise<void> =>
     ipcRenderer.invoke(IpcChannel.UsageRefresh, providerId),
   openLogin: (providerId: string): Promise<boolean> =>
@@ -34,7 +35,9 @@ const api = {
   onUsageUpdated: (callback: (snapshot: UsageSnapshot) => void): (() => void) =>
     subscribe(IpcChannel.UsageUpdated, callback),
   onSettingsUpdated: (callback: (settings: AppSettings) => void): (() => void) =>
-    subscribe(IpcChannel.SettingsUpdated, callback)
+    subscribe(IpcChannel.SettingsUpdated, callback),
+  onSyncStateChanged: (callback: (state: SyncState) => void): (() => void) =>
+    subscribe(IpcChannel.UsageSyncState, callback)
 }
 
 export type BuddyUsageApi = typeof api

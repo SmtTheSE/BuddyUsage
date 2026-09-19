@@ -18,6 +18,12 @@ export interface ProviderDefinition {
   sessionPartition: string
   /** The limit windows this provider's page is expected to show, in display order. */
   metrics: MetricSpec[]
+  /**
+   * Local directories the provider's CLI writes to while in use, relative
+   * to the home directory. Activity there triggers a fresh sync shortly
+   * after, so the gauge tracks real usage without the user asking.
+   */
+  activityPaths?: string[]
   /** Inspect the loaded page and decide whether the user is signed in. */
   isLoggedIn: (contents: WebContents) => Promise<boolean>
   /** Pull raw visible text out of the loaded page for parsing. */

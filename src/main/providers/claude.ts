@@ -22,6 +22,7 @@ export const claudeProvider: ProviderDefinition = {
   loginUrl: 'https://claude.ai/login',
   sessionPartition: 'persist:claude',
   metrics,
+  activityPaths: ['.claude/projects'],
   isLoggedIn: defaultIsLoggedIn,
   extractRaw: defaultExtractRaw,
   parse: (raw) => parseUsageText(raw, metrics)

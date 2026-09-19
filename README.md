@@ -64,6 +64,20 @@ Click a ring → **Sign in** (or use the menu-bar icon → Sign in). A real
 browser window opens on that provider's own login page. Sessions are kept
 in an isolated, persistent partition per provider, so you do this once.
 
+## Staying current without clicking Refresh
+
+The gauges are meant to be glanced at, not poked. Every sync path funnels
+into one deduplicated fetch per provider, so nothing ever double-hits a
+site:
+
+| Trigger | When |
+| --- | --- |
+| Poll | Every 3 min by default (1–60 in Settings), staggered per provider |
+| You use a tool | The CLI's local session dir changes (`~/.claude/projects`, `~/.codex/sessions`, `~/.gemini/tmp`) → re-sync ~15 s later, at most once a minute while active |
+| A limit resets | "Resets in 51 min" / "at 7:07 PM" / "Sep 22 at 11:07 PM" is parsed and a re-sync is scheduled just after, so the ring drops to 0% on its own |
+| Wake from sleep | Everything re-syncs a few seconds after resume |
+| You open a card | If its data is older than 45 s it quietly refreshes, showing "Updating…" inline |
+
 ## Why it works this way
 
 CLI coding assistants don't expose a unified usage API. The only place to

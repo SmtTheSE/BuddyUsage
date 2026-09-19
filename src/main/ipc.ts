@@ -4,7 +4,7 @@ import { providerRegistry, getProvider } from './providers/registry'
 import { getAllSnapshots, onSnapshotUpdated } from './store/usageStore'
 import { getSettings, updateSettings } from './store/settings'
 import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler'
-import { requestProviderLogin } from './scraping/scrapeRunner'
+import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
 import { getIslandWindow, repositionIslandWindow, setIgnoreMouse } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
 
@@ -31,6 +31,10 @@ export function registerIpcHandlers(): void {
   )
 
   ipcMain.handle(IpcChannel.UsageGetAll, () => getAllSnapshots())
+
+  ipcMain.handle(IpcChannel.UsageSyncState, () =>
+    Object.fromEntries(providerRegistry.map((p) => [p.id, isSyncing(p.id)]))
+  )
 
   ipcMain.handle(IpcChannel.UsageRefresh, (_event, providerId?: string) =>
     refreshProviderNow(providerId)
@@ -91,4 +95,5 @@ export function registerIpcHandlers(): void {
 
   // Push snapshot updates to every renderer as they land, instead of polling.
   onSnapshotUpdated((snapshot) => broadcast(IpcChannel.UsageUpdated, snapshot))
+  onSyncStateChanged((state) => broadcast(IpcChannel.UsageSyncState, state))
 }

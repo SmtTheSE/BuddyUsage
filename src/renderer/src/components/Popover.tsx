@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { ProviderMeta, ScreenEdge, UsageSnapshot } from '@shared/types'
 import { ProviderIcon } from './ProviderIcon'
@@ -13,11 +13,28 @@ interface PopoverProps {
   onMouseLeave: () => void
 }
 
+// Opening the popover on data older than this quietly re-syncs it, so what
+// the user is looking at is current without them touching anything.
+const STALE_ON_OPEN_MS = 45_000
+const SYNC_LABEL_TICK_MS = 10_000
+
 /** The detail card that appears beside a ring on hover. */
 export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }: PopoverProps): JSX.Element {
   const { refresh, openLogin, openDashboard } = useAppStore()
+  const syncing = useAppStore((s) => s.syncing[provider.id] === true)
   const [busy, setBusy] = useState(false)
+  const [, tick] = useState(0)
   const status = snapshot?.status ?? 'loading'
+
+  useEffect(() => {
+    const age = snapshot?.lastSyncedAt ? Date.now() - new Date(snapshot.lastSyncedAt).getTime() : Infinity
+    if (!syncing && age > STALE_ON_OPEN_MS && status !== 'logged_out') void refresh(provider.id)
+    // Keep "Synced Xs ago" honest while the card stays open.
+    const timer = setInterval(() => tick((n) => n + 1), SYNC_LABEL_TICK_MS)
+    return () => clearInterval(timer)
+    // Only on open: re-running on every snapshot change would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider.id])
 
   async function run(action: () => Promise<unknown>): Promise<void> {
     setBusy(true)
@@ -85,31 +102,47 @@ export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }
       {status === 'error' && (
         <div className="popover__state">
           <p className="popover__error">{snapshot?.message ?? 'Could not load usage.'}</p>
-          <button className="button" disabled={busy} onClick={() => void run(() => refresh(provider.id))}>
+          <button className="button" disabled={busy || syncing} onClick={() => void run(() => refresh(provider.id))}>
             Retry
           </button>
         </div>
       )}
 
-      {status === 'loading' && (
+      {status === 'loading' && !syncing && (
         <div className="popover__state">
-          <p>Loading…</p>
+          <p>Waiting for first sync…</p>
         </div>
       )}
 
       <div className="popover__footer">
-        <span className={status === 'stale' ? 'popover__sync popover__sync--stale' : 'popover__sync'}>
-          {status === 'stale' ? 'Stale · ' : ''}
-          {relativeSyncLabel(snapshot?.lastSyncedAt)}
+        <span
+          className={
+            syncing
+              ? 'popover__sync popover__sync--live'
+              : status === 'stale'
+                ? 'popover__sync popover__sync--stale'
+                : 'popover__sync'
+          }
+        >
+          {syncing ? (
+            <>
+              <span className="sync-dot" aria-hidden="true" /> Updating…
+            </>
+          ) : (
+            <>
+              {status === 'stale' ? 'Stale · ' : ''}
+              {relativeSyncLabel(snapshot?.lastSyncedAt)}
+            </>
+          )}
         </span>
         <span className="popover__actions">
           <button
             className="link"
-            disabled={busy}
+            disabled={busy || syncing}
             onClick={() => void run(() => refresh(provider.id))}
             aria-label={`Refresh ${provider.name}`}
           >
-            {busy ? '…' : 'Refresh'}
+            Refresh
           </button>
           <button className="link" onClick={() => void openDashboard(provider.id)}>
             Open ↗

@@ -3,7 +3,7 @@ import type { AppSettings } from '@shared/types'
 import { DEFAULT_REFRESH_INTERVAL_MINUTES } from '@shared/types'
 import { providerRegistry } from '../providers/registry'
 
-const CURRENT_SCHEMA_VERSION = 2
+const CURRENT_SCHEMA_VERSION = 3
 
 function defaultSettings(): AppSettings {
   return {
@@ -30,10 +30,20 @@ function migrate(stored: Partial<AppSettings> & Record<string, unknown>): AppSet
   const defaults = defaultSettings()
   if (stored.schemaVersion === CURRENT_SCHEMA_VERSION) return { ...defaults, ...stored } as AppSettings
 
-  // v1 -> v2: the top-notch/pill layout was replaced by an edge-docked
-  // island; drop `windowMode` and reset the offset to the new default.
-  const { windowMode: _windowMode, verticalOffset: _offset, ...rest } = stored
-  return { ...defaults, ...rest, schemaVersion: CURRENT_SCHEMA_VERSION }
+  let next: Partial<AppSettings> & Record<string, unknown> = stored
+  if ((next.schemaVersion ?? 1) < 2) {
+    // v1 -> v2: the top-notch/pill layout was replaced by an edge-docked
+    // island; drop `windowMode` and reset the offset to the new default.
+    const { windowMode: _windowMode, verticalOffset: _offset, ...rest } = next
+    next = rest
+  }
+  if ((next.schemaVersion ?? 1) < 3 && next.refreshIntervalMinutes === 10) {
+    // v2 -> v3: the default poll dropped from 10 to 3 minutes now that
+    // activity/reset/wake triggers carry most of the freshness; only move
+    // users still on the old default.
+    next = { ...next, refreshIntervalMinutes: defaults.refreshIntervalMinutes }
+  }
+  return { ...defaults, ...next, schemaVersion: CURRENT_SCHEMA_VERSION }
 }
 
 export function getSettings(): AppSettings {

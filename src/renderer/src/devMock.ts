@@ -54,6 +54,7 @@ export function installDevMock(): void {
   window.buddyUsage = {
     listProviders: async () => providers,
     getAllUsage: async () => snapshots,
+    getSyncState: async () => ({}),
     refreshUsage: noop,
     openLogin: async () => true,
     openDashboard: noop,
@@ -64,6 +65,7 @@ export function installDevMock(): void {
     openSettings: noop,
     quit: noop,
     onUsageUpdated: () => () => undefined,
-    onSettingsUpdated: () => () => undefined
+    onSettingsUpdated: () => () => undefined,
+    onSyncStateChanged: () => () => undefined
   }
 }

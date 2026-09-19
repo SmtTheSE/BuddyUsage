@@ -19,6 +19,7 @@ export const codexProvider: ProviderDefinition = {
   loginUrl: 'https://chatgpt.com/auth/login',
   sessionPartition: 'persist:codex',
   metrics,
+  activityPaths: ['.codex/sessions'],
   isLoggedIn: defaultIsLoggedIn,
   extractRaw: defaultExtractRaw,
   parse: (raw) => parseUsageText(raw, metrics)

@@ -100,6 +100,7 @@ export function Island(): JSX.Element {
             const snapshot = state.usageByProvider[provider.id]
             const metric = primaryMetric(snapshot)
             const color = hasReadings(snapshot) ? usageColor(metric?.percentUsed) : USAGE_COLORS.idle
+            const syncing = state.syncing[provider.id] === true
             return (
               <button
                 key={provider.id}
@@ -107,7 +108,13 @@ export function Island(): JSX.Element {
                   if (el) cellRefs.current.set(provider.id, el)
                   else cellRefs.current.delete(provider.id)
                 }}
-                className={activeId === provider.id ? 'cell cell--active' : 'cell'}
+                className={[
+                  'cell',
+                  activeId === provider.id ? 'cell--active' : '',
+                  syncing ? 'cell--syncing' : ''
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 onMouseEnter={() => open(provider.id)}
                 onMouseLeave={scheduleClose}
                 onClick={() => setPinned((current) => (current === provider.id ? null : provider.id))}

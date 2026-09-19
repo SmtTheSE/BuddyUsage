@@ -8,7 +8,7 @@ import { useAppStore } from '../state/store'
 import { ProviderIcon } from './ProviderIcon'
 import { relativeSyncLabel } from '../lib/usageColor'
 
-const INTERVAL_OPTIONS = [5, 10, 15, 30, 60].filter(
+const INTERVAL_OPTIONS = [1, 2, 3, 5, 10, 15, 30, 60].filter(
   (m) => m >= MIN_REFRESH_INTERVAL_MINUTES && m <= MAX_REFRESH_INTERVAL_MINUTES
 )
 
@@ -93,6 +93,10 @@ export function SettingsView(): JSX.Element | null {
             ))}
           </select>
         </label>
+        <p className="settings__hint">
+          Also re-syncs on its own when you use a tool, when a limit resets, after sleep, and
+          whenever you open a card on data older than a minute.
+        </p>
         <label className="settings-row">
           <span>Launch at login</span>
           <input

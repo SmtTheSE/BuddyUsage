@@ -271,6 +271,36 @@ button {
   color: #f0a848;
 }
 
+.popover__sync--live {
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: sync-pulse 1s ease-in-out infinite;
+}
+
+/* A ring being re-fetched breathes gently instead of freezing or flashing. */
+.cell--syncing .ring__progress {
+  animation: ring-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ring-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 .popover__actions {
   display: flex;
   gap: 10px;
@@ -356,6 +386,13 @@ body[data-route='settings'] {
   letter-spacing: 0.06em;
   color: var(--text-dim);
   margin: 0 0 2px;
+}
+
+.settings__hint {
+  margin: -2px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-dim);
 }
 
 .settings__section--footer {

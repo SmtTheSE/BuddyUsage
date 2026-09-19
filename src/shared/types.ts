@@ -29,6 +29,11 @@ export interface UsageMetric {
   resetLabel?: string
 }
 
+export interface SyncState {
+  providerId: ProviderId
+  syncing: boolean
+}
+
 export interface UsageSnapshot {
   providerId: ProviderId
   status: UsageStatus
@@ -61,8 +66,8 @@ export interface AppSettings {
   theme: ThemeMode
 }
 
-export const DEFAULT_REFRESH_INTERVAL_MINUTES = 10
-export const MIN_REFRESH_INTERVAL_MINUTES = 3
+export const DEFAULT_REFRESH_INTERVAL_MINUTES = 3
+export const MIN_REFRESH_INTERVAL_MINUTES = 1
 export const MAX_REFRESH_INTERVAL_MINUTES = 120
 
 /** Thresholds that drive ring/bar colouring. */
@@ -93,6 +98,7 @@ export const IpcChannel = {
   UsageGetAll: 'usage:getAll',
   UsageRefresh: 'usage:refresh',
   UsageUpdated: 'usage:updated',
+  UsageSyncState: 'usage:syncState',
   UsageOpenLogin: 'usage:openLogin',
   UsageOpenDashboard: 'usage:openDashboard',
   SettingsGet: 'settings:get',

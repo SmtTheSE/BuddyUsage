@@ -5,6 +5,7 @@ interface AppState {
   providers: ProviderMeta[]
   usageByProvider: Record<string, UsageSnapshot>
   settings: AppSettings | null
+  syncing: Record<string, boolean>
   init: () => Promise<void>
   refresh: (providerId?: string) => Promise<void>
   openLogin: (providerId: string) => Promise<void>
@@ -16,16 +17,19 @@ export const useAppStore = create<AppState>((set) => ({
   providers: [],
   usageByProvider: {},
   settings: null,
+  syncing: {},
 
   init: async () => {
-    const [providers, snapshots, settings] = await Promise.all([
+    const [providers, snapshots, settings, syncing] = await Promise.all([
       window.buddyUsage.listProviders(),
       window.buddyUsage.getAllUsage(),
-      window.buddyUsage.getSettings()
+      window.buddyUsage.getSettings(),
+      window.buddyUsage.getSyncState()
     ])
     set({
       providers,
       settings,
+      syncing,
       usageByProvider: Object.fromEntries(snapshots.map((s) => [s.providerId, s]))
     })
     window.buddyUsage.onUsageUpdated((snapshot) => {
@@ -34,6 +38,9 @@ export const useAppStore = create<AppState>((set) => ({
       }))
     })
     window.buddyUsage.onSettingsUpdated((next) => set({ settings: next }))
+    window.buddyUsage.onSyncStateChanged(({ providerId, syncing }) =>
+      set((state) => ({ syncing: { ...state.syncing, [providerId]: syncing } }))
+    )
   },
 
   refresh: async (providerId) => {

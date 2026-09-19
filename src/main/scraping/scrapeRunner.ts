@@ -67,13 +67,51 @@ async function performScrape(
   }
 }
 
+export interface SyncState {
+  providerId: string
+  syncing: boolean
+}
+
+type SyncListener = (state: SyncState) => void
+const syncListeners = new Set<SyncListener>()
+const inFlight = new Map<string, Promise<UsageSnapshot>>()
+
+/** The UI subscribes to show "Updating…" while a provider is being fetched. */
+export function onSyncStateChanged(listener: SyncListener): () => void {
+  syncListeners.add(listener)
+  return () => syncListeners.delete(listener)
+}
+
+export function isSyncing(providerId: string): boolean {
+  return inFlight.has(providerId)
+}
+
+function emitSync(providerId: string, syncing: boolean): void {
+  for (const listener of syncListeners) listener({ providerId, syncing })
+}
+
 /**
  * Runs one provider's full fetch → parse → persist cycle. Never throws and
  * never hangs past SCRAPE_TIMEOUT_MS: every outcome resolves to a
  * well-formed UsageSnapshot so one broken/slow provider can't take down the
- * scheduler, stall the UI, or block the next poll.
+ * scheduler, stall the UI, or block the next poll. Several triggers can
+ * fire at once (poll, hover, activity, reset) — a provider already being
+ * fetched just shares the in-flight result instead of hitting the site again.
  */
-export async function runProviderScrape(provider: ProviderDefinition): Promise<UsageSnapshot> {
+export function runProviderScrape(provider: ProviderDefinition): Promise<UsageSnapshot> {
+  const existing = inFlight.get(provider.id)
+  if (existing) return existing
+
+  emitSync(provider.id, true)
+  const run = scrapeOnce(provider).finally(() => {
+    inFlight.delete(provider.id)
+    emitSync(provider.id, false)
+  })
+  inFlight.set(provider.id, run)
+  return run
+}
+
+async function scrapeOnce(provider: ProviderDefinition): Promise<UsageSnapshot> {
   const nowIso = new Date().toISOString()
   const previous = getSnapshot(provider.id)
   const win = getProviderWindow(provider)

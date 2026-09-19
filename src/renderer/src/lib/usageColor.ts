@@ -16,8 +16,10 @@ export function usageColor(percentUsed?: number): string {
 
 export function relativeSyncLabel(iso?: string): string {
   if (!iso) return 'Never synced'
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  if (minutes < 1) return 'Synced just now'
+  const seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
+  if (seconds < 15) return 'Synced just now'
+  if (seconds < 60) return `Synced ${seconds}s ago`
+  const minutes = Math.round(seconds / 60)
   if (minutes < 60) return `Synced ${minutes} min ago`
   const hours = Math.round(minutes / 60)
   return `Synced ${hours}h ago`

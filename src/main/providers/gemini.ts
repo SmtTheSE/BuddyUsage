@@ -59,6 +59,7 @@ export const geminiProvider: ProviderDefinition = {
   loginUrl: 'https://accounts.google.com/ServiceLogin?continue=https://gemini.google.com/app',
   sessionPartition: 'persist:gemini',
   metrics,
+  activityPaths: ['.gemini/tmp'],
   isLoggedIn: geminiIsLoggedIn,
   extractRaw: async (contents) => {
     await wait(1500)
