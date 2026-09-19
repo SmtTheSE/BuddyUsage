@@ -13,8 +13,8 @@ export function openSettingsWindow(): BrowserWindow {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 440,
-    height: 560,
+    width: 470,
+    height: 700,
     title: 'BuddyUsage Settings',
     resizable: false,
     minimizable: false,

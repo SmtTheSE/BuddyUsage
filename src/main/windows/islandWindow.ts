@@ -1,10 +1,16 @@
-import { BrowserWindow, screen } from 'electron'
+import { BrowserWindow, screen, type Display, type Rectangle } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
-import { ISLAND_LAYOUT } from '@shared/types'
+import { ISLAND_LAYOUT, type AppSettings, type ScreenEdge } from '@shared/types'
 import { getSettings } from '../store/settings'
 
 let islandWindow: BrowserWindow | null = null
+let snapping = false
+let moveDebounce: ReturnType<typeof setTimeout> | undefined
+let onUserMoved: ((patch: Partial<AppSettings>) => void) | null = null
+
+// Keep the island's top within the work area, leaving room for its body.
+const MIN_VISIBLE_HEIGHT = 200
 
 export function rendererEntry(hash = ''): { url?: string; file?: string; hash: string } {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -13,30 +19,69 @@ export function rendererEntry(hash = ''): { url?: string; file?: string; hash: s
   return { file: join(__dirname, '../renderer/index.html'), hash }
 }
 
-function computeBounds(): { x: number; y: number; width: number; height: number } {
-  const settings = getSettings()
-  const display = screen.getPrimaryDisplay()
+function targetDisplay(settings: AppSettings): Display {
+  const wanted = settings.displayId
+  return screen.getAllDisplays().find((d) => d.id === wanted) ?? screen.getPrimaryDisplay()
+}
+
+/**
+ * The island docks to the edge of the display's *work area*, not its raw
+ * bounds — the work area excludes the Dock (which users put on any side),
+ * the menu bar and the Windows taskbar, so the island is never hidden
+ * underneath system chrome.
+ */
+function computeBounds(settings = getSettings()): Rectangle {
+  const display = targetDisplay(settings)
+  const area = display.workArea
   const { windowWidth, windowHeight, islandInsetTop } = ISLAND_LAYOUT
 
-  const x =
-    settings.edge === 'left'
-      ? display.bounds.x
-      : display.bounds.x + display.bounds.width - windowWidth
+  const x = settings.edge === 'left' ? area.x : area.x + area.width - windowWidth
+  const maxOffset = Math.max(0, area.height - MIN_VISIBLE_HEIGHT)
+  const offset = Math.min(Math.max(0, settings.verticalOffset), maxOffset)
   // The island itself sits `islandInsetTop` below the window's top edge, so
   // offset the window upward by that much to make `verticalOffset` mean
   // "distance from the top of the usable screen to the island".
-  const y = display.workArea.y + settings.verticalOffset - islandInsetTop
+  const y = area.y + offset - islandInsetTop
   return { x, y, width: windowWidth, height: windowHeight }
 }
 
-export function createIslandWindow(): BrowserWindow {
+/** Where a window dropped by the user should snap to: nearest edge of the display it's mostly on. */
+function snapTarget(bounds: Rectangle): Partial<AppSettings> {
+  const display = screen.getDisplayMatching(bounds)
+  const area = display.workArea
+  const centerX = bounds.x + bounds.width / 2
+  const edge: ScreenEdge = centerX < area.x + area.width / 2 ? 'left' : 'right'
+  const verticalOffset = Math.round(bounds.y + ISLAND_LAYOUT.islandInsetTop - area.y)
+  return { edge, verticalOffset, displayId: display.id }
+}
+
+function handleUserMove(): void {
+  const win = getIslandWindow()
+  if (!win || snapping || !onUserMoved) return
+  const patch = snapTarget(win.getBounds())
+  const current = getSettings()
+  if (
+    patch.edge === current.edge &&
+    patch.verticalOffset === current.verticalOffset &&
+    patch.displayId === current.displayId
+  ) {
+    return
+  }
+  onUserMoved(patch)
+}
+
+export function createIslandWindow(handleMoved: (patch: Partial<AppSettings>) => void): BrowserWindow {
+  onUserMoved = handleMoved
+
   islandWindow = new BrowserWindow({
     ...computeBounds(),
     frame: false,
     transparent: true,
     hasShadow: false,
     resizable: false,
-    movable: false,
+    // Draggable by its glass body (renderer marks it as an app drag region);
+    // on release it snaps to the nearest screen edge and the spot is saved.
+    movable: true,
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -85,6 +130,17 @@ export function createIslandWindow(): BrowserWindow {
     }
   }, 3000)
 
+  // macOS emits 'moved' once when a drag ends; elsewhere 'move' streams
+  // during the drag, so settle on a short debounce.
+  if (process.platform === 'darwin') {
+    islandWindow.on('moved', handleUserMove)
+  } else {
+    islandWindow.on('move', () => {
+      if (moveDebounce) clearTimeout(moveDebounce)
+      moveDebounce = setTimeout(handleUserMove, 250)
+    })
+  }
+
   screen.on('display-metrics-changed', repositionIslandWindow)
   screen.on('display-added', repositionIslandWindow)
   screen.on('display-removed', repositionIslandWindow)
@@ -97,7 +153,15 @@ export function getIslandWindow(): BrowserWindow | null {
 }
 
 export function repositionIslandWindow(): void {
-  getIslandWindow()?.setBounds(computeBounds())
+  const win = getIslandWindow()
+  if (!win) return
+  snapping = true
+  win.setBounds(computeBounds(), process.platform === 'darwin')
+  // Let the programmatic move's own 'moved'/'move' events pass before we
+  // start treating movement as user-initiated again.
+  setTimeout(() => {
+    snapping = false
+  }, 400)
 }
 
 /**

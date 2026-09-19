@@ -12,6 +12,7 @@ function defaultSettings(): AppSettings {
     enabledProviders: Object.fromEntries(providerRegistry.map((p) => [p.id, true])),
     edge: 'right',
     verticalOffset: 120,
+    islandCollapsed: false,
     launchAtLogin: false,
     theme: 'auto'
   }

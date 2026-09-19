@@ -46,6 +46,7 @@ export function installDevMock(): void {
     enabledProviders: { claude: true, codex: true, gemini: true },
     edge: 'right',
     verticalOffset: 120,
+    islandCollapsed: false,
     launchAtLogin: false,
     theme: 'auto'
   }

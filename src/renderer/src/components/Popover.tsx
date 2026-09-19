@@ -9,6 +9,7 @@ interface PopoverProps {
   provider: ProviderMeta
   snapshot?: UsageSnapshot
   edge: ScreenEdge
+  pinned?: boolean
   onMouseEnter: () => void
   onMouseLeave: () => void
 }
@@ -19,7 +20,7 @@ const STALE_ON_OPEN_MS = 45_000
 const SYNC_LABEL_TICK_MS = 10_000
 
 /** The detail card that appears beside a ring on hover. */
-export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }: PopoverProps): JSX.Element {
+export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter, onMouseLeave }: PopoverProps): JSX.Element {
   const { refresh, openLogin, openDashboard } = useAppStore()
   const syncing = useAppStore((s) => s.syncing[provider.id] === true)
   const [busy, setBusy] = useState(false)
@@ -49,10 +50,11 @@ export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }
     <motion.div
       className={`popover popover--${edge}`}
       data-solid
-      initial={{ opacity: 0, x: edge === 'right' ? 8 : -8, scale: 0.98 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: edge === 'right' ? 6 : -6, scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+      initial={{ opacity: 0, x: edge === 'right' ? 14 : -14, scale: 0.96, filter: 'blur(6px)' }}
+      animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, x: edge === 'right' ? 10 : -10, scale: 0.97, filter: 'blur(4px)' }}
+      // Springs overshoot; blur can't go negative, so it tweens.
+      transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8, filter: { type: 'tween', duration: 0.18 } }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
@@ -60,6 +62,11 @@ export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }
         <ProviderIcon providerId={provider.id} name={provider.name} size={18} />
         <span>{provider.name} Usage</span>
         {snapshot?.planLabel && <span className="popover__plan">{snapshot.planLabel}</span>}
+        {pinned && (
+          <span className="popover__pin" title="Pinned — click the ring again to unpin" aria-label="Pinned">
+            ⌖
+          </span>
+        )}
       </div>
 
       {hasReadings(snapshot) &&
@@ -72,7 +79,7 @@ export function Popover({ provider, snapshot, edge, onMouseEnter, onMouseLeave }
             <div className="metric__track">
               <motion.div
                 className="metric__fill"
-                style={{ background: usageColor(metric.percentUsed) }}
+                style={{ background: usageColor(metric.percentUsed), ['--bar-color' as string]: usageColor(metric.percentUsed) }}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, Math.max(0, metric.percentUsed))}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}

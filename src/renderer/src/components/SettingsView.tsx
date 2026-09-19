@@ -1,19 +1,54 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   MAX_REFRESH_INTERVAL_MINUTES,
   MIN_REFRESH_INTERVAL_MINUTES,
-  type ScreenEdge
+  type ScreenEdge,
+  type ThemeMode
 } from '@shared/types'
 import { useAppStore } from '../state/store'
 import { ProviderIcon } from './ProviderIcon'
+import { Switch } from './Switch'
 import { relativeSyncLabel } from '../lib/usageColor'
 
 const INTERVAL_OPTIONS = [1, 2, 3, 5, 10, 15, 30, 60].filter(
   (m) => m >= MIN_REFRESH_INTERVAL_MINUTES && m <= MAX_REFRESH_INTERVAL_MINUTES
 )
 
+const SECTION_SPRING = { type: 'spring', stiffness: 260, damping: 28 } as const
+
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (next: T) => void
+}): JSX.Element {
+  return (
+    <div className="segmented" role="radiogroup">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          className={value === option.value ? 'segmented__item segmented__item--on' : 'segmented__item'}
+          onClick={() => onChange(option.value)}
+        >
+          {value === option.value && (
+            <motion.span layoutId="segmented-pill" className="segmented__pill" transition={SECTION_SPRING} />
+          )}
+          <span className="segmented__label">{option.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function SettingsView(): JSX.Element | null {
-  const { settings, providers, usageByProvider, updateSettings, openLogin, refresh } = useAppStore()
+  const { settings, providers, usageByProvider, syncing, updateSettings, openLogin, refresh } = useAppStore()
   const [busy, setBusy] = useState<string | null>(null)
   if (!settings) return null
 
@@ -28,61 +63,87 @@ export function SettingsView(): JSX.Element | null {
 
   return (
     <div className="settings">
-      <h1 className="settings__title">BuddyUsage</h1>
+      <header className="settings__header">
+        <h1 className="settings__title">BuddyUsage</h1>
+        <p className="settings__subtitle">Your AI assistants, at a glance.</p>
+      </header>
 
-      <section className="settings__section">
-        <h2>Providers</h2>
+      <motion.section
+        className="card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SECTION_SPRING, delay: 0.02 }}
+      >
+        <h2 className="card__title">Providers</h2>
         {providers.map((provider) => {
           const snapshot = usageByProvider[provider.id]
           const enabled = settings.enabledProviders[provider.id] !== false
+          const status =
+            snapshot?.status === 'logged_out'
+              ? 'Not signed in'
+              : snapshot?.status === 'error'
+                ? 'Needs attention'
+                : syncing[provider.id]
+                  ? 'Updating…'
+                  : relativeSyncLabel(snapshot?.lastSyncedAt)
           return (
-            <div key={provider.id} className="provider-row">
-              <label className="provider-row__main">
-                <input
-                  type="checkbox"
+            <div key={provider.id} className={enabled ? 'row row--provider' : 'row row--provider row--muted'}>
+              <span className="row__icon">
+                <ProviderIcon providerId={provider.id} name={provider.name} size={18} />
+              </span>
+              <span className="row__main">
+                <span className="row__label">{provider.name}</span>
+                <span className="row__hint">{status}</span>
+              </span>
+              <span className="row__actions">
+                {snapshot?.status === 'logged_out' ? (
+                  <button
+                    className="button button--small button--tinted"
+                    disabled={busy !== null}
+                    onClick={() => void withBusy(`login:${provider.id}`, () => openLogin(provider.id))}
+                  >
+                    {busy === `login:${provider.id}` ? 'Waiting…' : 'Sign in'}
+                  </button>
+                ) : (
+                  <button
+                    className="button button--small"
+                    disabled={busy !== null || syncing[provider.id] === true}
+                    onClick={() => void withBusy(`refresh:${provider.id}`, () => refresh(provider.id))}
+                  >
+                    Refresh
+                  </button>
+                )}
+                <Switch
                   checked={enabled}
-                  onChange={(e) =>
+                  label={`Show ${provider.name}`}
+                  onChange={(next) =>
                     void updateSettings({
-                      enabledProviders: { ...settings.enabledProviders, [provider.id]: e.target.checked }
+                      enabledProviders: { ...settings.enabledProviders, [provider.id]: next }
                     })
                   }
                 />
-                <ProviderIcon providerId={provider.id} name={provider.name} size={16} />
-                <span>{provider.name}</span>
-                <span className="provider-row__status">
-                  {snapshot?.status === 'logged_out'
-                    ? 'Not signed in'
-                    : snapshot?.status === 'error'
-                      ? 'Error'
-                      : relativeSyncLabel(snapshot?.lastSyncedAt)}
-                </span>
-              </label>
-              <div className="provider-row__actions">
-                <button
-                  className="button button--small"
-                  disabled={busy !== null}
-                  onClick={() => void withBusy(`login:${provider.id}`, () => openLogin(provider.id))}
-                >
-                  {busy === `login:${provider.id}` ? 'Waiting…' : 'Sign in'}
-                </button>
-                <button
-                  className="button button--small"
-                  disabled={busy !== null}
-                  onClick={() => void withBusy(`refresh:${provider.id}`, () => refresh(provider.id))}
-                >
-                  {busy === `refresh:${provider.id}` ? '…' : 'Refresh'}
-                </button>
-              </div>
+              </span>
             </div>
           )
         })}
-      </section>
+      </motion.section>
 
-      <section className="settings__section">
-        <h2>Behaviour</h2>
-        <label className="settings-row">
-          <span>Refresh every</span>
+      <motion.section
+        className="card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SECTION_SPRING, delay: 0.06 }}
+      >
+        <h2 className="card__title">Sync</h2>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Refresh every</span>
+            <span className="row__hint">
+              Also re-syncs when you use a tool, when a limit resets, after sleep, and when you open a card.
+            </span>
+          </span>
           <select
+            className="select"
             value={settings.refreshIntervalMinutes}
             onChange={(e) => void updateSettings({ refreshIntervalMinutes: Number(e.target.value) })}
           >
@@ -92,36 +153,56 @@ export function SettingsView(): JSX.Element | null {
               </option>
             ))}
           </select>
-        </label>
-        <p className="settings__hint">
-          Also re-syncs on its own when you use a tool, when a limit resets, after sleep, and
-          whenever you open a card on data older than a minute.
-        </p>
-        <label className="settings-row">
-          <span>Launch at login</span>
-          <input
-            type="checkbox"
+        </div>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Launch at login</span>
+          </span>
+          <Switch
             checked={settings.launchAtLogin}
-            onChange={(e) => void updateSettings({ launchAtLogin: e.target.checked })}
+            label="Launch at login"
+            onChange={(next) => void updateSettings({ launchAtLogin: next })}
           />
-        </label>
-      </section>
+        </div>
+      </motion.section>
 
-      <section className="settings__section">
-        <h2>Island</h2>
-        <label className="settings-row">
-          <span>Screen edge</span>
-          <select
+      <motion.section
+        className="card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SECTION_SPRING, delay: 0.1 }}
+      >
+        <h2 className="card__title">Island</h2>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Screen edge</span>
+          </span>
+          <Segmented<ScreenEdge>
             value={settings.edge}
-            onChange={(e) => void updateSettings({ edge: e.target.value as ScreenEdge })}
-          >
-            <option value="right">Right</option>
-            <option value="left">Left</option>
-          </select>
-        </label>
-        <label className="settings-row">
-          <span>Distance from top</span>
-          <span className="settings-row__control">
+            options={[
+              { value: 'left', label: 'Left' },
+              { value: 'right', label: 'Right' }
+            ]}
+            onChange={(edge) => void updateSettings({ edge })}
+          />
+        </div>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Collapsed</span>
+            <span className="row__hint">Slim tab with status dots — hover to peek.</span>
+          </span>
+          <Switch
+            checked={settings.islandCollapsed}
+            label="Collapse island"
+            onChange={(next) => void updateSettings({ islandCollapsed: next })}
+          />
+        </div>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Distance from top</span>
+            <span className="row__hint">Or just drag the island — it snaps to the nearest edge of any screen.</span>
+          </span>
+          <span className="row__control">
             <input
               type="range"
               min={0}
@@ -130,16 +211,30 @@ export function SettingsView(): JSX.Element | null {
               value={settings.verticalOffset}
               onChange={(e) => void updateSettings({ verticalOffset: Number(e.target.value) })}
             />
-            <span className="settings-row__value">{settings.verticalOffset}px</span>
+            <span className="row__value">{settings.verticalOffset}px</span>
           </span>
-        </label>
-      </section>
+        </div>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Appearance</span>
+          </span>
+          <Segmented<ThemeMode>
+            value={settings.theme}
+            options={[
+              { value: 'auto', label: 'Auto' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' }
+            ]}
+            onChange={(theme) => void updateSettings({ theme })}
+          />
+        </div>
+      </motion.section>
 
-      <section className="settings__section settings__section--footer">
+      <footer className="settings__footer">
         <button className="link" onClick={() => void window.buddyUsage.quit()}>
           Quit BuddyUsage
         </button>
-      </section>
+      </footer>
     </div>
   )
 }

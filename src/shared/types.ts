@@ -62,6 +62,10 @@ export interface AppSettings {
   edge: ScreenEdge
   /** Distance in points from the top of the usable screen area to the island's top. */
   verticalOffset: number
+  /** Display the island lives on (Electron display id); falls back to the primary display. */
+  displayId?: number
+  /** Collapsed to a slim tab (hover to peek, click the handle to expand). */
+  islandCollapsed: boolean
   launchAtLogin: boolean
   theme: ThemeMode
 }

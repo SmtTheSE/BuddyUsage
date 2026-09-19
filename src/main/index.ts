@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { createIslandWindow, getIslandWindow } from './windows/islandWindow'
 import { createTray } from './tray'
-import { registerIpcHandlers } from './ipc'
+import { applySettings, registerIpcHandlers } from './ipc'
 import { startScrapeScheduler, stopScrapeScheduler } from './scraping/scheduler'
 import { destroyAllProviderWindows } from './scraping/windowPool'
 import { getSettings } from './store/settings'
@@ -38,14 +38,14 @@ if (!gotLock) {
     app.setLoginItemSettings({ openAtLogin: getSettings().launchAtLogin })
 
     registerIpcHandlers()
-    createIslandWindow()
+    createIslandWindow(applySettings)
     createTray()
     startScrapeScheduler()
 
     app.on('activate', () => {
       const island = getIslandWindow()
       if (island) island.show()
-      else createIslandWindow()
+      else createIslandWindow(applySettings)
     })
   })
 

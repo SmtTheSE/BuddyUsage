@@ -33,6 +33,13 @@ export function islandPath(width: number, height: number, r: number, e: number):
   ].join(' ')
 }
 
+/**
+ * Liquid-glass rendering of the silhouette: a translucent tinted body, a
+ * refractive edge (bright where light enters at the top-left, fading out),
+ * and a soft specular bloom near the top. Electron can't blur the desktop
+ * behind a shaped transparent window, so depth comes from these layers
+ * rather than a backdrop blur.
+ */
 export function IslandShape({
   width,
   height,
@@ -40,6 +47,10 @@ export function IslandShape({
   flareRadius = 22,
   mirrored = false
 }: IslandShapeProps): JSX.Element {
+  const r = Math.min(cornerRadius, Math.max(8, width / 2 - 2))
+  const d = islandPath(width, height, r, flareRadius)
+  const id = mirrored ? 'l' : 'r'
+
   return (
     <svg
       className="island__shape"
@@ -49,7 +60,35 @@ export function IslandShape({
       aria-hidden="true"
       style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
     >
-      <path d={islandPath(width, height, cornerRadius, flareRadius)} fill="#050505" />
+      <defs>
+        <linearGradient id={`glass-body-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--island-glass-top)" />
+          <stop offset="1" stopColor="var(--island-glass-bottom)" />
+        </linearGradient>
+        <linearGradient id={`glass-edge-${id}`} x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0" stopColor="rgba(255,255,255,0.55)" />
+          <stop offset="0.35" stopColor="rgba(255,255,255,0.14)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0.05)" />
+        </linearGradient>
+        <radialGradient id={`glass-bloom-${id}`} cx="0.25" cy="0.12" r="0.7">
+          <stop offset="0" stopColor="rgba(255,255,255,0.22)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <clipPath id={`glass-clip-${id}`}>
+          <path d={d} />
+        </clipPath>
+      </defs>
+
+      <path d={d} fill={`url(#glass-body-${id})`} />
+      <rect width={width} height={height} fill={`url(#glass-bloom-${id})`} clipPath={`url(#glass-clip-${id})`} />
+      <path
+        d={d}
+        fill="none"
+        stroke={`url(#glass-edge-${id})`}
+        strokeWidth="1.25"
+        clipPath={`url(#glass-clip-${id})`}
+        transform="translate(0.5 0.5)"
+      />
     </svg>
   )
 }

@@ -1,13 +1,58 @@
+/* ------------------------------------------------------------------ */
+/* Design tokens — Liquid Glass                                        */
+/* Depth comes from layered translucency, a refractive edge that      */
+/* catches light at the top, a soft specular bloom, and spring motion. */
+/* ------------------------------------------------------------------ */
+
 :root {
-  --island-bg: #050505;
   --island-width: 108px;
-  --popover-bg: #0c0c0e;
-  --popover-border: rgba(255, 255, 255, 0.08);
-  --track: rgba(255, 255, 255, 0.14);
-  --text: #f2f2f4;
-  --text-muted: #8e8e93;
-  --text-dim: #6a6a70;
   --accent: #0a84ff;
+  --ease-glass: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body[data-theme='dark'] {
+  --text: #f5f5f7;
+  --text-muted: #9a9aa0;
+  --text-dim: #6e6e74;
+
+  --island-glass-top: rgba(46, 46, 52, 0.88);
+  --island-glass-bottom: rgba(10, 10, 12, 0.94);
+
+  --glass-bg: linear-gradient(160deg, rgba(44, 44, 50, 0.88) 0%, rgba(18, 18, 21, 0.94) 100%);
+  --glass-edge-top: rgba(255, 255, 255, 0.42);
+  --glass-edge-bottom: rgba(255, 255, 255, 0.06);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35);
+
+  --control-bg: rgba(255, 255, 255, 0.08);
+  --control-bg-hover: rgba(255, 255, 255, 0.14);
+  --control-border: rgba(255, 255, 255, 0.1);
+  --track: rgba(255, 255, 255, 0.12);
+  --bar-track: rgba(255, 255, 255, 0.1);
+  --page-bg: #101012;
+}
+
+body[data-theme='light'] {
+  --text: #1c1c1e;
+  --text-muted: #6b6b70;
+  --text-dim: #9a9aa0;
+
+  /* The island stays a dark object in both themes — it reads as hardware. */
+  --island-glass-top: rgba(46, 46, 52, 0.9);
+  --island-glass-bottom: rgba(12, 12, 14, 0.95);
+
+  --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.88) 0%, rgba(236, 236, 240, 0.92) 100%);
+  --glass-edge-top: rgba(255, 255, 255, 0.95);
+  --glass-edge-bottom: rgba(0, 0, 0, 0.06);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 3px 10px rgba(0, 0, 0, 0.08);
+
+  --control-bg: rgba(0, 0, 0, 0.05);
+  --control-bg-hover: rgba(0, 0, 0, 0.09);
+  --control-border: rgba(0, 0, 0, 0.08);
+  --track: rgba(255, 255, 255, 0.14);
+  --bar-track: rgba(0, 0, 0, 0.08);
+  --page-bg: #f2f2f6;
 }
 
 * {
@@ -27,7 +72,9 @@ body,
     -apple-system,
     BlinkMacSystemFont,
     'SF Pro Text',
+    'SF Pro Display',
     system-ui,
+    'Segoe UI',
     sans-serif;
   color: var(--text);
   user-select: none;
@@ -37,6 +84,24 @@ body,
 button {
   font: inherit;
   color: inherit;
+}
+
+/* Refractive edge shared by every glass surface: a 1px gradient border
+   drawn through a mask so it follows the corner radius exactly. */
+.popover::before,
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, var(--glass-edge-top), var(--glass-edge-bottom) 60%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ---------- Island window ---------- */
@@ -50,6 +115,19 @@ button {
 .island {
   position: absolute;
   top: 100px; /* keep in sync with ISLAND_LAYOUT.islandInsetTop */
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+  /* Grab the glass to move the whole island; it snaps to the nearest edge on release. */
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+.island:active {
+  cursor: grabbing;
+}
+
+.cell,
+.island__handle {
+  -webkit-app-region: no-drag;
 }
 
 .island-root--right .island {
@@ -72,10 +150,27 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 40px 0 38px; /* flare radius (22) + breathing room */
+  padding: 40px 0 46px; /* flare (22) + room for the handle below */
+}
+
+.island__dots {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 44px 0 40px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
 }
 
 .cell {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -84,24 +179,76 @@ button {
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.18s ease;
-}
-
-.cell:hover,
-.cell--active {
-  transform: scale(1.04);
+  color: #f5f5f7;
 }
 
 .cell__label {
   font-size: 18px;
   font-weight: 500;
   letter-spacing: -0.2px;
-  color: var(--text);
   font-variant-numeric: tabular-nums;
+  transition: color 0.2s var(--ease-glass);
 }
+
+.cell--pinned .cell__label {
+  color: #fff;
+}
+
+.island__handle {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.2s var(--ease-glass),
+    background 0.2s var(--ease-glass);
+}
+
+.island:hover .island__handle,
+.island--collapsed .island__handle {
+  opacity: 1;
+}
+
+.island__handle:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.island__handle-icon {
+  display: inline-block;
+  transform-origin: center;
+}
+
+.island--collapsed .island__handle {
+  bottom: 22px;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+}
+
+/* ---------- Ring ---------- */
 
 .ring {
   position: relative;
+  filter: drop-shadow(0 0 0 transparent);
+  transition: filter 0.35s var(--ease-glass);
+}
+
+.cell:hover .ring,
+.cell--active .ring {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ring-color) 55%, transparent));
 }
 
 .ring svg {
@@ -127,6 +274,11 @@ button {
   color: #ffffff;
 }
 
+/* A ring being re-fetched breathes gently instead of freezing or flashing. */
+.cell--syncing .ring__progress {
+  animation: ring-breathe 1.4s ease-in-out infinite;
+}
+
 /* ---------- Popover ---------- */
 
 .popover-anchor {
@@ -146,34 +298,37 @@ button {
 .popover {
   position: relative;
   width: 340px;
-  background: var(--popover-bg);
-  border: 1px solid var(--popover-border);
-  border-radius: 16px;
   padding: 12px 14px 10px;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.45),
-    0 2px 6px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
+  background: var(--glass-bg);
+  border-radius: 18px;
+  box-shadow: var(--glass-inner), var(--glass-shadow);
 }
 
+.popover > * {
+  position: relative;
+}
+
+/* The pointer toward the ring, drawn as a rotated glass square. */
 .popover::after {
   content: '';
   position: absolute;
   top: 50%;
-  width: 0;
-  height: 0;
-  border: 11px solid transparent;
-  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: var(--glass-bg);
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 3px;
 }
 
 .popover--right::after {
-  right: -21px;
-  border-left-color: var(--popover-bg);
+  right: -7px;
+  box-shadow: 1px -1px 0 0 var(--glass-edge-bottom);
 }
 
 .popover--left::after {
-  left: -21px;
-  border-right-color: var(--popover-bg);
+  left: -7px;
+  box-shadow: -1px 1px 0 0 var(--glass-edge-bottom);
 }
 
 .popover__header {
@@ -190,9 +345,20 @@ button {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: 999px;
+}
+
+.popover__pin {
+  font-size: 13px;
+  color: var(--accent);
+  margin-left: auto;
+}
+
+.popover__plan + .popover__pin {
+  margin-left: 6px;
 }
 
 .metric + .metric {
@@ -219,19 +385,24 @@ button {
 .metric__track {
   height: 6px;
   border-radius: 3px;
-  background: #2a2a2e;
+  background: var(--bar-track);
   overflow: hidden;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 
 .metric__fill {
   height: 100%;
   border-radius: 3px;
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--bar-color) 55%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .metric__value {
   margin-top: 6px;
   font-size: 12.5px;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .metric__detail {
@@ -262,7 +433,7 @@ button {
   align-items: center;
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid var(--popover-border);
+  border-top: 1px solid var(--control-border);
   font-size: 11px;
   color: var(--text-dim);
 }
@@ -283,22 +454,8 @@ button {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
   animation: sync-pulse 1s ease-in-out infinite;
-}
-
-/* A ring being re-fetched breathes gently instead of freezing or flashing. */
-.cell--syncing .ring__progress {
-  animation: ring-breathe 1.4s ease-in-out infinite;
-}
-
-@keyframes sync-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes ring-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
 }
 
 .popover__actions {
@@ -309,18 +466,26 @@ button {
 /* ---------- Controls ---------- */
 
 .button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
   padding: 5px 12px;
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition:
+    background 0.18s var(--ease-glass),
+    transform 0.18s var(--ease-glass);
 }
 
 .button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--control-bg-hover);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .button:disabled {
@@ -329,8 +494,17 @@ button {
 }
 
 .button--small {
-  padding: 3px 9px;
+  padding: 4px 10px;
   font-size: 11.5px;
+}
+
+.button--tinted {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.button--tinted:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
 }
 
 .link {
@@ -339,23 +513,146 @@ button {
   padding: 0;
   cursor: pointer;
   color: var(--text-muted);
+  transition: color 0.18s var(--ease-glass);
 }
 
 .link:hover:not(:disabled) {
   color: var(--text);
 }
 
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--control-border);
+  background: var(--control-bg);
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition:
+    background 0.25s var(--ease-glass),
+    border-color 0.25s var(--ease-glass),
+    box-shadow 0.25s var(--ease-glass);
+}
+
+.switch--on {
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 80%, #fff);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #e8e8ec);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.segmented {
+  position: relative;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.segmented__item {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s var(--ease-glass);
+}
+
+.segmented__item--on {
+  color: var(--text);
+}
+
+.segmented__pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.1));
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body[data-theme='light'] .segmented__pill {
+  background: #ffffff;
+}
+
+.segmented__label {
+  position: relative;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--control-bg);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  padding: 5px 28px 5px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 55%,
+    calc(100% - 10px) 55%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+  width: 140px;
+}
+
 /* ---------- Settings window ---------- */
 
 body[data-route='settings'] {
-  background: #121214;
+  background: var(--page-bg);
+  overflow: auto;
+}
+
+body[data-route='settings'] #root {
+  height: auto;
+  min-height: 100%;
 }
 
 .settings {
-  padding: 34px 22px 20px;
+  padding: 40px 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   font-size: 13px;
   -webkit-app-region: drag;
 }
@@ -363,89 +660,99 @@ body[data-route='settings'] {
 .settings button,
 .settings input,
 .settings select,
-.settings label {
+.settings label,
+.settings .card {
   -webkit-app-region: no-drag;
 }
 
 .settings__title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   margin: 0;
 }
 
-.settings__section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.settings__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
 }
 
-.settings__section h2 {
+.card {
+  position: relative;
+  background: var(--glass-bg);
+  border-radius: 18px;
+  box-shadow: var(--glass-inner), var(--glass-shadow);
+  padding: 12px 14px 6px;
+}
+
+.card__title {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
-  margin: 0 0 2px;
+  margin: 0 0 6px;
 }
 
-.settings__hint {
-  margin: -2px 2px 0;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--text-dim);
-}
-
-.settings__section--footer {
-  margin-top: auto;
-  align-items: flex-start;
-}
-
-.provider-row {
+.row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--control-border);
 }
 
-.provider-row__main {
-  display: flex;
+.card__title + .row {
+  border-top: none;
+}
+
+.row--muted .row__label,
+.row--muted .row__icon {
+  opacity: 0.45;
+}
+
+.row__icon {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  flex-shrink: 0;
+  transition: opacity 0.2s var(--ease-glass);
+}
+
+.row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   flex: 1;
   min-width: 0;
 }
 
-.provider-row__status {
-  margin-left: auto;
-  font-size: 11px;
+.row__label {
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.2s var(--ease-glass);
+}
+
+.row__hint {
+  font-size: 11.5px;
+  line-height: 1.35;
   color: var(--text-muted);
-  white-space: nowrap;
 }
 
-.provider-row__actions {
-  display: flex;
-  gap: 6px;
-}
-
-.settings-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.settings-row__control {
+.row__actions,
+.row__control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.settings-row__value {
+.row__value {
   font-size: 11.5px;
   color: var(--text-muted);
   min-width: 42px;
@@ -453,20 +760,41 @@ body[data-route='settings'] {
   font-variant-numeric: tabular-nums;
 }
 
-select {
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 3px 6px;
-  font: inherit;
+.settings__footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
 }
 
-input[type='range'] {
-  accent-color: var(--accent);
-  width: 150px;
+/* ---------- Motion ---------- */
+
+@keyframes sync-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-input[type='checkbox'] {
-  accent-color: var(--accent);
+@keyframes ring-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
