@@ -20,6 +20,8 @@ export interface ProviderDefinition {
   metrics: MetricSpec[]
   /** Shown when the account is signed in but its plan publishes no usage meter (typically Free). */
   freeTierNote: string
+  /** Whether a fresh install shows this provider; users can toggle it in Settings. Defaults to true. */
+  defaultEnabled?: boolean
   /**
    * Local directories the provider's CLI writes to while in use, relative
    * to the home directory. Activity there triggers a fresh sync shortly

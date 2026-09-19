@@ -50,6 +50,15 @@ describe('findFraction', () => {
     expect(findFraction('12/50 requests remaining')).toMatchObject({ used: 12, limit: 50 })
   })
 
+  it('handles dollar amounts (Cursor / Copilot credits)', () => {
+    expect(findFraction('Cursor Models\n$12.40 of $20.00 included')).toMatchObject({
+      used: 12.4,
+      limit: 20,
+      unit: '$',
+      percentUsed: 62
+    })
+  })
+
   it('handles thousands separators', () => {
     expect(findFraction('1,200 of 5,000 tokens')).toMatchObject({ used: 1200, limit: 5000 })
   })

@@ -76,7 +76,8 @@ function status(args) {
     return
   }
   for (const snap of snapshots) {
-    const name = snap.providerId === 'chatgpt' ? 'ChatGPT' : snap.providerId.charAt(0).toUpperCase() + snap.providerId.slice(1)
+    const NAMES = { chatgpt: 'ChatGPT', copilot: 'Copilot', cursor: 'Cursor' }
+    const name = NAMES[snap.providerId] ?? snap.providerId.charAt(0).toUpperCase() + snap.providerId.slice(1)
     const synced = color.dim(`synced ${relative(snap.lastSyncedAt)}`)
     if (snap.status === 'logged_out') {
       console.log(`${color.bold(name.padEnd(8))} ${color.dim('sign in required')}  ${synced}`)

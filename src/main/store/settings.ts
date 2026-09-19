@@ -9,7 +9,7 @@ function defaultSettings(): AppSettings {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     refreshIntervalMinutes: DEFAULT_REFRESH_INTERVAL_MINUTES,
-    enabledProviders: Object.fromEntries(providerRegistry.map((p) => [p.id, true])),
+    enabledProviders: Object.fromEntries(providerRegistry.map((p) => [p.id, p.defaultEnabled !== false])),
     edge: 'right',
     verticalOffset: 120,
     islandCollapsed: false,
@@ -51,10 +51,10 @@ function migrate(stored: Partial<AppSettings> & Record<string, unknown>): AppSet
 
 export function getSettings(): AppSettings {
   const migrated = migrate(store.get('settings') as Partial<AppSettings> & Record<string, unknown>)
-  // New providers added after a user's first run should default to enabled.
+  // Providers added after a user's first run pick up their own default.
   for (const provider of providerRegistry) {
     if (!(provider.id in migrated.enabledProviders)) {
-      migrated.enabledProviders[provider.id] = true
+      migrated.enabledProviders[provider.id] = provider.defaultEnabled !== false
     }
   }
   return migrated

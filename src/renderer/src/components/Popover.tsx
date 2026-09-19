@@ -98,7 +98,10 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
               {metric.used !== undefined && metric.limit !== undefined && (
                 <span className="metric__detail">
                   {' '}
-                  · {metric.used} / {metric.limit} {metric.unit ?? ''}
+                  ·{' '}
+                  {metric.unit && /^[$€£]$/.test(metric.unit)
+                    ? `${metric.unit}${metric.used.toFixed(2)} / ${metric.unit}${metric.limit.toFixed(2)}`
+                    : `${metric.used} / ${metric.limit} ${metric.unit ?? ''}`}
                 </span>
               )}
             </div>

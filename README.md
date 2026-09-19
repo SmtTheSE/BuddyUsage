@@ -1,7 +1,7 @@
 # BuddyUsage
 
 A small island, docked to the edge of your screen, that shows how much
-of your **Claude**, **ChatGPT / Codex** and **Gemini** plan you've used —
+of your **Claude**, **ChatGPT / Codex**, **Gemini**, **Cursor** and **GitHub Copilot** plan you've used —
 without alt-tabbing into each provider's website.
 
 One ring per assistant, coloured by how close you are to the limit. Hover a
@@ -103,6 +103,8 @@ honest states rather than errors:
 | **Claude** (claude.ai → Settings → Usage) | Current session + weekly limits with reset times | Anthropic publishes no percentages; the ring shows **Free** and the card explains — the app tells you when you hit the limit |
 | **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
 | **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
+| **Cursor** (cursor.com → Dashboard → Usage) · off by default | Included usage per model pool in dollars, monthly reset | Hobby plan shows included usage once used |
+| **GitHub Copilot** (github.com → Settings → Billing → Metered usage) · off by default | AI Credits used of included (legacy plans: premium requests), monthly reset | Copilot Free shows metered usage once there is any |
 
 ## Updates
 

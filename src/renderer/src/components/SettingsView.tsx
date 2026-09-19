@@ -76,6 +76,9 @@ export function SettingsView(): JSX.Element | null {
         transition={{ ...SECTION_SPRING, delay: 0.02 }}
       >
         <h2 className="card__title">Providers</h2>
+        <p className="row__hint" style={{ margin: '0 0 6px' }}>
+          Switch on the assistants you use — each one becomes a ring on the island.
+        </p>
         {providers.map((provider) => {
           const snapshot = usageByProvider[provider.id]
           const enabled = settings.enabledProviders[provider.id] !== false

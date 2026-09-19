@@ -38,8 +38,8 @@ const KNOWN_PLANS: { label: string; pattern: RegExp }[] = [
   { label: 'Free', pattern: /\bFree\b(?!\s*(?:trial|messages?\s+until))/i }
 ]
 
-/** Matches "12 of 50 messages", "12/50 requests", "12 out of 50". */
-const FRACTION_PATTERN = /([\d,.]+)\s*(?:\/|of|out of)\s*([\d,.]+)\s*([a-zA-Z%]+)?/i
+/** Matches "12 of 50 messages", "12/50 requests", "12 out of 50", "$3.20 of $15.00". */
+const FRACTION_PATTERN = /([$€£]?)([\d,.]+)\s*(?:\/|of|out of)\s*([$€£]?)([\d,.]+)\s*([a-zA-Z%]+)?/i
 
 /** Matches a standalone percentage. */
 const PERCENT_PATTERN = /(\d{1,3}(?:\.\d+)?)\s?%/
@@ -83,13 +83,14 @@ export function findFraction(
 ): Pick<UsageMetric, 'used' | 'limit' | 'unit' | 'percentUsed'> | undefined {
   const match = FRACTION_PATTERN.exec(text)
   if (!match) return undefined
-  const used = toNumber(match[1])
-  const limit = toNumber(match[2])
+  const used = toNumber(match[2])
+  const limit = toNumber(match[4])
   if (!Number.isFinite(used) || !Number.isFinite(limit) || limit <= 0) return undefined
+  const currency = match[1] || match[3]
   return {
     used,
     limit,
-    unit: match[3]?.toLowerCase(),
+    unit: currency || match[5]?.toLowerCase(),
     percentUsed: Math.round((used / limit) * 100)
   }
 }

@@ -121,7 +121,7 @@ export function primaryMetric(snapshot?: UsageSnapshot): UsageMetric | undefined
  */
 export const ISLAND_LAYOUT = {
   windowWidth: 480,
-  windowHeight: 640,
+  windowHeight: 920,
   /** Distance from the window's top to the island's top. */
   islandInsetTop: 100,
   islandWidth: 108
