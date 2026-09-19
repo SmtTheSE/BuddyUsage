@@ -13,12 +13,13 @@ Not sure which Mac you have? Click the Apple menu → **About This Mac**: "Apple
 
 ## Install on Mac
 
-**Prefer no security prompt at all?** Use Homebrew (paste into Terminal):
+**Prefer no security prompt at all?** Paste this into Terminal (Applications → Utilities → Terminal) and press Return:
 
 ```
-brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
-brew install --cask --no-quarantine buddyusage
+curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
+
+**Homebrew users:** `brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage && brew trust SmtTheSE/buddyusage && brew install --cask buddyusage`
 
 **Or the DMG:**
 

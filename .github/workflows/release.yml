@@ -85,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Keep the Homebrew cask in step with the release so
-  # `brew install --cask --no-quarantine buddyusage` always gets the newest
+  # `brew install --cask buddyusage` always gets the newest
   # build with correct checksums. Uses the repo's own token — no extra secrets.
   update-cask:
     needs: build

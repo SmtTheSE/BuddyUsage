@@ -17,21 +17,23 @@ you:
 
 ### macOS
 
-**Homebrew — no security prompt** (recommended):
-
-```bash
-brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
-brew install --cask --no-quarantine buddyusage
-```
-
-`--no-quarantine` matters: it's what stops Gatekeeper from flagging the app
-as "unverified". Upgrades: `brew upgrade --cask buddyusage`.
-
-**Installer script — no security prompt:**
+**Installer script — no security prompt at all:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
+
+**Homebrew — one prompt on first launch, easy upgrades:**
+
+```bash
+brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
+brew trust SmtTheSE/buddyusage
+brew install --cask buddyusage
+```
+
+Upgrades: `brew upgrade --cask buddyusage`. (Homebrew 5 removed its
+`--no-quarantine` flag, so this path shows the same one-time prompt as the
+DMG below.)
 
 **DMG — one prompt on first launch:**
 [Apple Silicon](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg) ·
@@ -63,9 +65,9 @@ or `curl -fsSL …/install.sh | bash` as above. Make it executable and run.
 
 Gatekeeper flags any browser download that isn't notarized by Apple, and
 notarization requires a paid Apple Developer ID — there is no open-source
-workaround for the DMG path. What *is* open-source-friendly: installs that
-don't come through a browser (Homebrew with `--no-quarantine`, the curl
-script) carry no quarantine flag and open cleanly. If a Developer ID becomes
+workaround for a browser download, and Homebrew now quarantines casks too.
+The one prompt-free route is the installer script, which downloads without
+a browser and clears the flag itself. If a Developer ID becomes
 available, see [Signed releases](#signed-releases-no-security-prompts) —
 the pipeline notarizes automatically and the DMG prompt disappears too.
 For Windows, [SignPath Foundation](https://signpath.org/foundation) signs
