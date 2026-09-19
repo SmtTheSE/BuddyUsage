@@ -45,13 +45,26 @@ jobs:
       # Gatekeeper prompt for users) and the Windows build is Authenticode
       # signed (no SmartScreen warning). Without them the macOS build is
       # ad-hoc signed by build/afterPack.cjs and Windows ships unsigned.
-      - run: npx electron-builder ${{ matrix.flag }} --publish always
+      # Export signing variables only when the secret is actually set: an
+      # empty CSC_LINK makes electron-builder look for a certificate at ""
+      # and abort, instead of falling back to the ad-hoc path.
+      - name: Configure code signing from secrets
+        shell: bash
+        run: |
+          any_cert=false
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID WIN_CSC_LINK WIN_CSC_KEY_PASSWORD; do
+            value="${!name}"
+            if [ -n "$value" ]; then
+              echo "$name=$value" >> "$GITHUB_ENV"
+              case "$name" in CSC_LINK|WIN_CSC_LINK) any_cert=true ;; esac
+            fi
+          done
+          echo "CSC_IDENTITY_AUTO_DISCOVERY=$any_cert" >> "$GITHUB_ENV"
+          echo "Code signing certificate configured: $any_cert"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # macOS: base64 .p12 of a "Developer ID Application" certificate + its password
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
           # macOS notarization: Apple ID, an app-specific password, and the team ID
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -59,6 +72,10 @@ jobs:
           # Windows: base64 .pfx code-signing certificate + its password
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - run: npx electron-builder ${{ matrix.flag }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Plain-language install steps on the release page itself, so someone
       # who lands there from a link never needs the README or a terminal.
