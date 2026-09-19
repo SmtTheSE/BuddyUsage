@@ -3,17 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BuddyUsage — Your AI usage, at a glance</title>
+  <title>BuddyUsage: your AI usage, at a glance</title>
   <meta name="description" content="A small glass island on the edge of your screen that shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you've used. Free and open source." />
-  <meta property="og:title" content="BuddyUsage — Your AI usage, at a glance" />
+  <meta property="og:title" content="BuddyUsage: your AI usage, at a glance" />
   <meta property="og:description" content="One ring per assistant. Hover for session and weekly limits. Never hit a limit by surprise again." />
-  <meta property="og:image" content="https://smtthese.github.io/BuddyUsage/hero.jpg" />
+  <meta property="og:image" content="https://smtthese.github.io/BuddyUsage/shot-island.jpg" />
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
       --ivory: #f5f2eb;
@@ -27,8 +24,7 @@
       --ok: #34c759;
       --warn: #e5d63a;
       --critical: #ff4d1c;
-      --serif: 'Instrument Serif', 'Iowan Old Style', 'Times New Roman', serif;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -43,10 +39,10 @@
     }
     a { color: inherit; }
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-    h1, h2, h3 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; margin: 0; }
-    h1 { font-size: clamp(44px, 7vw, 76px); line-height: 1.02; }
-    h2 { font-size: clamp(32px, 4.5vw, 44px); line-height: 1.1; }
-    h3 { font-size: 24px; line-height: 1.2; }
+    h1, h2, h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -0.025em; margin: 0; }
+    h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; }
+    h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.12; }
+    h3 { font-size: 20px; line-height: 1.25; font-weight: 600; }
     p { margin: 0; }
     .muted { color: var(--ink-2); }
     .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
@@ -63,19 +59,17 @@
     /* buttons */
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid transparent; transition: transform 0.15s ease, background 0.15s ease; cursor: pointer; }
     .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--ink); color: var(--ivory); }
-    .btn-primary:hover { background: #2c2a27; }
-    .btn-secondary { background: transparent; color: var(--ink); border-color: var(--line); }
-    .btn-secondary:hover { background: var(--ivory-2); }
-    .btn-clay { background: var(--clay); color: #fff; }
-    .btn-clay:hover { background: var(--clay-2); }
+    .btn-primary { background: var(--clay); color: #fff; box-shadow: 0 6px 18px rgba(217, 119, 87, 0.28); }
+    .btn-primary:hover { background: var(--clay-2); }
+    .btn-secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+    .btn-secondary:hover { background: #fbfaf7; }
     .btn-sm { padding: 8px 14px; font-size: 14px; }
 
     /* hero */
     .hero { padding: 72px 0 40px; }
     .hero__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
     .hero h1 { max-width: 12ch; margin: 18px 0 20px; }
-    .hero h1 em { font-style: italic; color: var(--clay); }
+    .hero h1 em { font-style: normal; color: var(--clay); }
     .hero .lede { font-size: 19px; max-width: 44ch; margin: 0 0 30px; }
     .cta { display: flex; gap: 12px; flex-wrap: wrap; }
     .cta-note { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
@@ -83,7 +77,7 @@
     .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
     .chip { font-size: 13px; padding: 5px 11px; border-radius: 999px; background: var(--ivory-2); color: var(--ink-2); text-decoration: none; }
     .hero__art { margin: 0; }
-    .hero__art img { display: block; width: 100%; height: auto; border-radius: 28px; box-shadow: 0 30px 80px rgba(26, 25, 23, 0.22); }
+    .hero__art img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 30%; border-radius: 28px; box-shadow: 0 30px 80px rgba(26, 25, 23, 0.22); background: #101012; }
 
     /* tour */
     .tour { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; align-items: start; }
@@ -105,12 +99,12 @@
     /* install */
     .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--ivory-2); margin-top: 28px; }
     .tab { border: none; background: none; padding: 8px 18px; border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; color: var(--ink-2); }
-    .tab[aria-selected="true"] { background: var(--ink); color: var(--ivory); }
+    .tab[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(26, 25, 23, 0.12); }
     .panel { display: none; margin-top: 28px; }
     .panel[data-active="true"] { display: block; }
     .steps { counter-reset: step; list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 14px; }
     .steps li { position: relative; padding-left: 44px; }
-    .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--ivory); font-weight: 600; font-size: 14px; display: grid; place-items: center; }
+    .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--clay); color: #fff; font-weight: 600; font-size: 14px; display: grid; place-items: center; }
     .callout { margin-top: 22px; padding: 16px 18px; border-radius: 16px; background: var(--ivory-2); font-size: 15px; }
     .callout > strong:first-child { display: block; margin-bottom: 4px; }
     .dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
@@ -167,7 +161,7 @@
       <div class="hero__copy">
         <div class="eyebrow">Free · Open source · macOS, Windows, Linux</div>
         <h1>Your AI usage, <em>at a glance.</em></h1>
-        <p class="lede muted">A small glass island on the edge of your screen shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you've used — so you never hit a limit mid-thought.</p>
+        <p class="lede muted">A small glass island on the edge of your screen shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you've used, so you never hit a limit mid-thought.</p>
         <div class="cta" id="cta">
           <a class="btn btn-primary" id="dl-primary" href="#install">Download</a>
           <a class="btn btn-secondary" href="#tour">See how it works</a>
@@ -178,7 +172,7 @@
         </div>
       </div>
       <figure class="hero__art">
-        <img src="hero.jpg" alt="The BuddyUsage island docked to the right edge of a Mac screen, showing Claude, ChatGPT and Gemini rings, with the Claude usage card open" width="1280" height="1280" />
+        <img src="shot-island.jpg" alt="The BuddyUsage island on the right edge of the screen with the Claude usage card open" width="960" height="1280" />
       </figure>
     </div>
   </header>
@@ -189,12 +183,12 @@
       <h2 style="margin-top:12px;max-width:20ch">Everything you need is one hover away.</h2>
       <div class="tour">
         <figure class="shot">
-          <img src="shot-island.jpg" alt="The island with the Claude card open, showing current session and weekly limits with reset times" loading="lazy" width="960" height="1280" />
-          <figcaption><strong>Hover a ring</strong> for session and weekly limits, with reset countdowns that tick live. Click to pin the card.</figcaption>
+          <img src="shot-update.jpg" alt="The Gemini card showing usage plus a banner offering a one-click update to a new version" loading="lazy" width="960" height="1280" />
+          <figcaption><strong>Hover a ring</strong> for session and weekly limits with live countdowns. New versions install with one click, right from the card.</figcaption>
         </figure>
         <figure class="shot">
           <img src="shot-collapsed.jpg" alt="The island collapsed into a slim tab with three coloured status dots" loading="lazy" width="960" height="1280" />
-          <figcaption><strong>Collapse it</strong> to a slim tab with status dots when you want the screen back. Hover to peek. Drag it anywhere — it snaps to any edge.</figcaption>
+          <figcaption><strong>Collapse it</strong> to a slim tab with status dots when you want the screen back. Hover to peek. Drag it anywhere and it snaps to any edge.</figcaption>
         </figure>
         <figure class="shot shot--tall">
           <img src="shot-settings.jpg" alt="BuddyUsage settings: provider toggles, refresh interval, screen edge, menu-bar readout" loading="lazy" width="940" height="1520" />
@@ -212,7 +206,7 @@
         <div class="feature">
           <div class="icon">◐</div>
           <h3>Always in view</h3>
-          <p class="muted">One ring per assistant, docked to the edge of your screen. Green, yellow, red — you know where you stand without opening anything.</p>
+          <p class="muted">One ring per assistant, docked to the edge of your screen. Green, yellow, red. You know where you stand without opening anything.</p>
         </div>
         <div class="feature">
           <div class="icon">↻</div>
@@ -239,7 +233,7 @@
     <div class="wrap">
       <div class="eyebrow">Install</div>
       <h2 style="margin-top:12px">Up and running in a minute.</h2>
-      <p class="muted" style="margin-top:12px;max-width:60ch">Pick your computer. Every download is the latest release, straight from GitHub. BuddyUsage updates itself afterwards — one click inside the app.</p>
+      <p class="muted" style="margin-top:12px;max-width:60ch">Pick your computer. Every download is the latest release, straight from GitHub. BuddyUsage updates itself afterwards with one click inside the app.</p>
 
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-tab="mac" aria-selected="true">macOS</button>
@@ -252,7 +246,7 @@
           <a class="btn btn-primary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">Download for Apple Silicon</a>
           <a class="btn btn-secondary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">Download for Intel</a>
         </div>
-        <p class="muted" style="margin-top:10px;font-size:14px">Not sure? Apple menu → <strong>About This Mac</strong>. "Apple M…" is Apple Silicon.</p>
+        <p class="muted" style="margin-top:10px;font-size:14px">Not sure? Apple menu, then <strong>About This Mac</strong>. "Apple M" means Apple Silicon.</p>
         <ol class="steps">
           <li>Open the downloaded <code>.dmg</code> and drag <strong>BuddyUsage</strong> onto <strong>Applications</strong>.</li>
           <li>Open Applications and double-click <strong>BuddyUsage</strong>. The island appears on the right edge; its icon sits in the menu bar.</li>
@@ -260,7 +254,7 @@
         </ol>
         <div class="callout">
           <strong>If macOS says it "could not verify" the app</strong>
-          Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>, then confirm. This happens once — BuddyUsage is open source and not (yet) notarized with a paid Apple Developer ID. On older macOS: right-click the app → Open.
+          Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>, then confirm. This happens once. BuddyUsage is open source and not yet notarized with a paid Apple Developer ID. On older macOS: right-click the app → Open.
         </div>
         <details class="alt">
           <summary>Prefer no prompt at all? Install from Terminal</summary>
@@ -279,7 +273,7 @@ brew install --cask buddyusage</pre>
           <a class="btn btn-secondary" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe">Windows on ARM</a>
         </div>
         <ol class="steps">
-          <li>Run the downloaded installer. It installs for your user only — no admin prompt — and starts automatically.</li>
+          <li>Run the downloaded installer. It installs for your user only, with no admin prompt, and starts automatically.</li>
           <li>The island appears on the right edge; the icon sits in the system tray.</li>
           <li>Click a ring → <strong>Sign in</strong>. Once per provider.</li>
         </ol>
@@ -321,11 +315,11 @@ brew install --cask buddyusage</pre>
       <h2 style="margin-top:12px">Straight answers.</h2>
       <div class="faq">
         <details><summary>How does it know my usage?</summary><p>It reads the same Settings → Usage page you'd open in a browser, in a hidden window that's signed in to your account. Nothing leaves your machine; there's no BuddyUsage server and no analytics.</p></details>
-        <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT don't show percentages on free plans — the ring says "Free" and the card explains, instead of showing an error.</p></details>
+        <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT don't show percentages on free plans, so the ring says "Free" and the card explains instead of showing an error.</p></details>
         <details><summary>Why does my Mac warn me the first time?</summary><p>The app isn't notarized with a paid Apple Developer ID, so Gatekeeper asks once. It's a standard step for open-source Mac apps: System Settings → Privacy &amp; Security → Open Anyway. The Terminal installer avoids the prompt entirely.</p></details>
-        <details><summary>Will it slow my machine down or hammer the sites?</summary><p>It polls every few minutes and otherwise reacts to real events — you using a tool, a limit resetting, waking from sleep. Every trigger funnels into one fetch per provider, so nothing is requested twice.</p></details>
-        <details><summary>Can I move it, hide it, change it?</summary><p>Drag it anywhere — it snaps to the nearest edge of any display. The ‹ handle collapses it to a slim tab. Settings lets you pick providers, refresh rate, edge, appearance, and an optional menu-bar readout.</p></details>
-        <details><summary>How do updates work?</summary><p>BuddyUsage checks GitHub Releases in the background. When there's a new version you'll see a dot on the island and an Update button — one click installs it and restarts. A download link is always there too.</p></details>
+        <details><summary>Will it slow my machine down or hammer the sites?</summary><p>It polls every few minutes and otherwise reacts to real events: you using a tool, a limit resetting, waking from sleep. Every trigger funnels into one fetch per provider, so nothing is requested twice.</p></details>
+        <details><summary>Can I move it, hide it, change it?</summary><p>Drag it anywhere and it snaps to the nearest edge of any display. The ‹ handle collapses it to a slim tab. Settings lets you pick providers, refresh rate, edge, appearance, and an optional menu-bar readout.</p></details>
+        <details><summary>How do updates work?</summary><p>BuddyUsage checks GitHub Releases in the background. When there's a new version you'll see a dot on the island and an Update button. One click installs it and restarts. A download link is always there too.</p></details>
       </div>
     </div>
   </section>
