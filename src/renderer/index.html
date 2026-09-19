@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      'unsafe-eval' is required by Vite's dev-mode module transform/HMR;
+      this window never loads remote or user-provided content (unlike the
+      hidden per-provider scraping windows), so the practical risk is low.
+      Still blocks any *remote* script source, which is the main XSS vector.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; object-src 'none'"
+    />
+    <title>BuddyUsage</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

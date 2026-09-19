@@ -1,0 +1,40 @@
+appId: com.buddyusage.app
+productName: BuddyUsage
+# Stable names so "releases/latest/download/<name>" links never change.
+artifactName: ${productName}-${arch}.${ext}
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - package.json
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  icon: build/icon.png
+  # No Apple Developer ID is configured, so the app ships unsigned and
+  # un-notarized; install.sh strips the quarantine flag. Set these to your
+  # identity/team to produce a signed build.
+  identity: null
+  notarize: false
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    LSUIElement: true
+dmg:
+  sign: false
+publish:
+  provider: github
+  owner: SmtTheSE
+  repo: BuddyUsage
+  releaseType: release

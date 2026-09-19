@@ -1,0 +1,133 @@
+import type { BrowserWindow } from 'electron'
+import type { ProviderDefinition } from '../providers/types'
+import type { UsageSnapshot } from '@shared/types'
+import { getProviderWindow } from './windowPool'
+import { getSnapshot, setSnapshot } from '../store/usageStore'
+import { looksSignedOut } from '../providers/parseHeuristics'
+
+const PAGE_SETTLE_MS = 2000 // lets client-rendered SPA content paint before we read the DOM
+const LOGIN_POLL_MS = 1500
+const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
+// A provider's page can hang indefinitely (slow bot-challenge, dropped
+// connection, an SPA that never fires 'did-finish-load'). Without a hard
+// ceiling here, that provider would sit in "loading" forever and never
+// surface a retry — observed live against a real provider during development.
+const SCRAPE_TIMEOUT_MS = 25_000
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function navigateAndSettle(win: BrowserWindow, url: string): Promise<void> {
+  await win.webContents.loadURL(url).catch(() => undefined)
+  await wait(PAGE_SETTLE_MS)
+}
+
+/** A failed refresh keeps the last good reading visible instead of blanking the gauge. */
+function carryOverGoodFields(previous?: UsageSnapshot): Pick<UsageSnapshot, 'planLabel' | 'metrics'> {
+  if (previous?.status !== 'ok') return { metrics: [] }
+  return { planLabel: previous.planLabel, metrics: previous.metrics }
+}
+
+async function performScrape(
+  provider: ProviderDefinition,
+  win: BrowserWindow,
+  previous: UsageSnapshot | undefined,
+  nowIso: string
+): Promise<UsageSnapshot> {
+  await navigateAndSettle(win, provider.usageUrl)
+
+  const loggedIn = await provider.isLoggedIn(win.webContents)
+  if (!loggedIn) {
+    return { providerId: provider.id, status: 'logged_out', message: 'Sign in required', metrics: [], lastSyncedAt: nowIso }
+  }
+
+  const raw = await provider.extractRaw(win.webContents)
+  const parsed = provider.parse(raw)
+
+  if (parsed) {
+    return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...parsed }
+  }
+
+  // The URL-based isLoggedIn check above can miss providers that never
+  // redirect a logged-out visitor to a distinct URL (e.g. ChatGPT's landing
+  // page) — fall back to text-based auth-wall detection so this reports
+  // "sign in required" instead of a generic parse error.
+  if (previous?.status !== 'ok' && looksSignedOut(raw)) {
+    return { providerId: provider.id, status: 'logged_out', message: 'Sign in required', metrics: [], lastSyncedAt: nowIso }
+  }
+
+  return {
+    providerId: provider.id,
+    status: previous?.status === 'ok' ? 'stale' : 'error',
+    message: "Couldn't read usage from this page — it may have changed.",
+    raw: raw.slice(0, 800),
+    lastSyncedAt: nowIso,
+    ...carryOverGoodFields(previous)
+  }
+}
+
+/**
+ * Runs one provider's full fetch → parse → persist cycle. Never throws and
+ * never hangs past SCRAPE_TIMEOUT_MS: every outcome resolves to a
+ * well-formed UsageSnapshot so one broken/slow provider can't take down the
+ * scheduler, stall the UI, or block the next poll.
+ */
+export async function runProviderScrape(provider: ProviderDefinition): Promise<UsageSnapshot> {
+  const nowIso = new Date().toISOString()
+  const previous = getSnapshot(provider.id)
+  const win = getProviderWindow(provider)
+
+  let timeoutHandle: ReturnType<typeof setTimeout>
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      if (!win.isDestroyed()) win.webContents.stop()
+      reject(new Error(`Timed out waiting for ${provider.name}'s usage page to respond.`))
+    }, SCRAPE_TIMEOUT_MS)
+  })
+
+  let snapshot: UsageSnapshot
+  try {
+    snapshot = await Promise.race([performScrape(provider, win, previous, nowIso), timeout])
+  } catch (error) {
+    snapshot = {
+      providerId: provider.id,
+      status: previous?.status === 'ok' ? 'stale' : 'error',
+      message: error instanceof Error ? error.message : 'Unknown error while fetching usage.',
+      lastSyncedAt: nowIso,
+      ...carryOverGoodFields(previous)
+    }
+  } finally {
+    clearTimeout(timeoutHandle!)
+  }
+
+  setSnapshot(snapshot)
+  return snapshot
+}
+
+/**
+ * Shows the provider's hidden window so the user can sign in, then polls
+ * until `isLoggedIn` succeeds (or times out) before hiding it again and
+ * kicking off an immediate scrape.
+ */
+export async function requestProviderLogin(provider: ProviderDefinition): Promise<boolean> {
+  const win = getProviderWindow(provider)
+  win.show()
+  win.focus()
+  await navigateAndSettle(win, provider.loginUrl ?? provider.usageUrl)
+
+  // Closing the window hides it (see windowPool) — treat that as "cancel".
+  const cancelled = (): boolean => win.isDestroyed() || !win.isVisible()
+
+  const deadline = Date.now() + LOGIN_TIMEOUT_MS
+  let loggedIn = false
+  while (!cancelled() && Date.now() < deadline) {
+    loggedIn = await provider.isLoggedIn(win.webContents)
+    if (loggedIn) break
+    await wait(LOGIN_POLL_MS)
+  }
+
+  if (!win.isDestroyed()) win.hide()
+  if (loggedIn) await runProviderScrape(provider)
+  return loggedIn
+}
