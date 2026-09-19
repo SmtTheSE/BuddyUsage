@@ -45,7 +45,9 @@ export function createIslandWindow(): BrowserWindow {
     alwaysOnTop: true,
     // A non-activating panel never steals keyboard focus from the app the
     // user is actually working in — clicks on the island still register.
-    type: 'panel',
+    // 'panel' is a macOS-only window type; other platforms get the same
+    // effect from focusable: false alone.
+    ...(process.platform === 'darwin' ? { type: 'panel' } : {}),
     focusable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -105,5 +107,8 @@ export function repositionIslandWindow(): void {
  * flowing so the renderer can flip it back when the cursor re-enters).
  */
 export function setIgnoreMouse(ignore: boolean): void {
+  // Linux can't forward mouse moves through an ignored window, so hover
+  // would never re-enable input there; the window simply stays solid.
+  if (process.platform === 'linux') return
   getIslandWindow()?.setIgnoreMouseEvents(ignore, { forward: true })
 }

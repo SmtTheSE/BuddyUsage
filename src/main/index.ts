@@ -9,6 +9,10 @@ import { getSettings } from './store/settings'
 
 // This is a menu-bar-style utility app: no Dock icon, single instance, lives
 // entirely in the island overlay + tray.
+// Linux compositors need this before any window exists for `transparent:
+// true` to actually produce a transparent surface.
+if (process.platform === 'linux') app.commandLine.appendSwitch('enable-transparent-visuals')
+
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()

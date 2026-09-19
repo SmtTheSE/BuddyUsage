@@ -1,6 +1,9 @@
 appId: com.buddyusage.app
 productName: BuddyUsage
-# Stable names so "releases/latest/download/<name>" links never change.
+# Stable names so "releases/latest/download/<name>" links never change:
+#   BuddyUsage-arm64.dmg / BuddyUsage-x64.dmg        (macOS)
+#   BuddyUsage-x64.exe   / BuddyUsage-arm64.exe      (Windows installer)
+#   BuddyUsage-x64.AppImage / BuddyUsage-arm64.AppImage (Linux)
 artifactName: ${productName}-${arch}.${ext}
 directories:
   buildResources: build
@@ -8,17 +11,14 @@ directories:
 files:
   - out/**/*
   - package.json
+
 mac:
   category: public.app-category.developer-tools
   target:
     - target: dmg
-      arch:
-        - arm64
-        - x64
+      arch: [arm64, x64]
     - target: zip
-      arch:
-        - arm64
-        - x64
+      arch: [arm64, x64]
   icon: build/icon.png
   # No Apple Developer ID is configured, so the app ships unsigned and
   # un-notarized; install.sh strips the quarantine flag. Set these to your
@@ -33,6 +33,27 @@ mac:
     LSUIElement: true
 dmg:
   sign: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+  icon: build/icon.png
+nsis:
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+  createDesktopShortcut: false
+  deleteAppDataOnUninstall: false
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+  icon: build/icon.png
+  category: Development
+  synopsis: Live plan usage for AI coding assistants
+
 publish:
   provider: github
   owner: SmtTheSE

@@ -1,47 +1,57 @@
 #!/usr/bin/env bash
-# BuddyUsage installer for macOS.
+# BuddyUsage installer for macOS and Linux.
 #   curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
-# Downloads the latest release DMG for this Mac's CPU, copies the app to
-# /Applications, strips the quarantine flag (the build is unsigned), and
-# launches it.
+# Windows: see install.ps1.
 set -euo pipefail
 
 REPO="SmtTheSE/BuddyUsage"
 APP="BuddyUsage"
 VERSION="${BUDDYUSAGE_VERSION:-latest}"
 
-if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "BuddyUsage currently ships macOS builds only. See https://github.com/$REPO/releases" >&2
-  exit 1
-fi
-
 case "$(uname -m)" in
-  arm64) ARCH="arm64" ;;
-  x86_64) ARCH="x64" ;;
+  arm64|aarch64) ARCH="arm64" ;;
+  x86_64|amd64) ARCH="x64" ;;
   *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
 
-if [[ "$VERSION" == "latest" ]]; then
-  URL="https://github.com/$REPO/releases/latest/download/$APP-$ARCH.dmg"
-else
-  URL="https://github.com/$REPO/releases/download/$VERSION/$APP-$ARCH.dmg"
-fi
+asset_url() {
+  if [[ "$VERSION" == "latest" ]]; then
+    echo "https://github.com/$REPO/releases/latest/download/$1"
+  else
+    echo "https://github.com/$REPO/releases/download/$VERSION/$1"
+  fi
+}
 
-WORK="$(mktemp -d -t buddyusage)"
-MOUNT="$WORK/mnt"
-trap 'hdiutil detach "$MOUNT" -quiet >/dev/null 2>&1 || true; rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d -t buddyusage.XXXXXX)"
+trap 'rm -rf "$WORK"' EXIT
 
-echo "Downloading $APP ($ARCH, $VERSION)…"
-curl -fL --progress-bar "$URL" -o "$WORK/$APP.dmg"
-
-echo "Mounting…"
-hdiutil attach "$WORK/$APP.dmg" -nobrowse -quiet -mountpoint "$MOUNT"
-
-echo "Installing to /Applications/$APP.app…"
-rm -rf "/Applications/$APP.app"
-cp -R "$MOUNT/$APP.app" "/Applications/$APP.app"
-# Unsigned build: without this, Gatekeeper reports the app as "damaged".
-xattr -dr com.apple.quarantine "/Applications/$APP.app"
-
-echo "Done. Launching $APP…"
-open -a "$APP"
+case "$(uname -s)" in
+  Darwin)
+    MOUNT="$WORK/mnt"
+    echo "Downloading $APP ($ARCH, $VERSION)…"
+    curl -fL --progress-bar "$(asset_url "$APP-$ARCH.dmg")" -o "$WORK/$APP.dmg"
+    echo "Mounting…"
+    hdiutil attach "$WORK/$APP.dmg" -nobrowse -quiet -mountpoint "$MOUNT"
+    echo "Installing to /Applications/$APP.app…"
+    rm -rf "/Applications/$APP.app"
+    cp -R "$MOUNT/$APP.app" "/Applications/$APP.app"
+    hdiutil detach "$MOUNT" -quiet
+    # Unsigned build: without this, Gatekeeper reports the app as "damaged".
+    xattr -dr com.apple.quarantine "/Applications/$APP.app"
+    echo "Done. Launching $APP…"
+    open -a "$APP"
+    ;;
+  Linux)
+    DEST="${HOME}/.local/bin/$APP.AppImage"
+    mkdir -p "$(dirname "$DEST")"
+    echo "Downloading $APP ($ARCH, $VERSION)…"
+    curl -fL --progress-bar "$(asset_url "$APP-$ARCH.AppImage")" -o "$DEST"
+    chmod +x "$DEST"
+    echo "Installed to $DEST (add ~/.local/bin to PATH if it isn't). Launching…"
+    nohup "$DEST" >/dev/null 2>&1 &
+    ;;
+  *)
+    echo "Unsupported OS: $(uname -s). On Windows run install.ps1." >&2
+    exit 1
+    ;;
+esac

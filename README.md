@@ -1,6 +1,6 @@
 # BuddyUsage
 
-A small macOS island, docked to the edge of your screen, that shows how much
+A small island, docked to the edge of your screen, that shows how much
 of your **Claude Code**, **Codex CLI** and **Gemini CLI** plan you've used —
 without alt-tabbing into each provider's website.
 
@@ -10,24 +10,43 @@ resets). Right-click for sign-in, refresh, dashboard, settings.
 
 ## Install
 
-**One-liner (macOS, Apple Silicon or Intel):**
+Builds ship for **macOS** (Apple Silicon + Intel), **Windows** (x64 + ARM64)
+and **Linux** (x64 + ARM64).
+
+**macOS / Linux one-liner:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
 
-**Direct download:**
+**Windows one-liner (PowerShell):**
 
-- Apple Silicon: https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg
-- Intel: https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg
-
-The build is not signed with an Apple Developer ID, so macOS will call it
-"damaged" on first launch unless the quarantine flag is removed. The
-installer does that for you; if you download the DMG by hand:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/BuddyUsage.app
+```powershell
+irm https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.ps1 | iex
 ```
+
+**Direct downloads (always the latest release):**
+
+| Platform | Link |
+| --- | --- |
+| macOS · Apple Silicon | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg |
+| macOS · Intel | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg |
+| Windows · x64 (Intel/AMD) | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe |
+| Windows · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe |
+| Linux · x64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.AppImage |
+| Linux · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage |
+
+The builds are not code-signed:
+
+- **macOS** calls the app "damaged" on first launch unless the quarantine
+  flag is removed. The installer does it; by hand:
+  `xattr -dr com.apple.quarantine /Applications/BuddyUsage.app`
+- **Windows** SmartScreen may show "Windows protected your PC" — choose
+  *More info → Run anyway*.
+- **Linux**: `chmod +x BuddyUsage-x64.AppImage && ./BuddyUsage-x64.AppImage`.
+  Transparency needs a compositing window manager; click-through on empty
+  areas isn't available on Linux, so the island's transparent margin stays
+  solid to the mouse.
 
 **CLI** (reads the same data the app collects, works even when the app isn't running):
 
@@ -84,7 +103,7 @@ npm install
 npm run dev          # launches the app with hot reload
 npm test             # parser unit tests
 npm run typecheck
-npm run build:mac    # unsigned .dmg + .zip in release/
+npm run build:mac    # unsigned .dmg + .zip in release/ (--win / --linux likewise)
 ```
 
 Open http://localhost:5173/#island in a normal browser while `npm run dev`
@@ -92,7 +111,7 @@ is running to iterate on the UI with mock data (no Electron needed).
 
 ### Releasing
 
-Push a tag and GitHub Actions builds both architectures and attaches them to
+Push a tag and GitHub Actions builds macOS, Windows and Linux (x64 + ARM64) and attaches them to
 a GitHub Release, which is what the install links above point at:
 
 ```bash
@@ -116,6 +135,7 @@ git push --follow-tags
   the label list quick.
 - **Unsigned build.** See the quarantine note above. Set `identity`/notarize
   in `electron-builder.yml` if you have a Developer ID.
-- **macOS only** for now — the island geometry assumes a macOS menu bar and
-  the installer uses `hdiutil`. The core (providers, parsing, store, CLI) is
-  platform-neutral.
+- **Best tested on macOS.** Windows and Linux builds ship from the same
+  code; the island docks to the edge of the primary display's work area on
+  every platform, but Linux transparency/click-through depends on the
+  compositor (see Install).

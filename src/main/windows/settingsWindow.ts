@@ -21,7 +21,9 @@ export function openSettingsWindow(): BrowserWindow {
     maximizable: false,
     fullscreenable: false,
     show: false,
-    titleBarStyle: 'hiddenInset',
+    // Inset traffic lights on macOS; a normal titlebar elsewhere.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' as const } : {}),
+    autoHideMenuBar: true,
     backgroundColor: '#121214',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

@@ -10,8 +10,18 @@ permissions:
   contents: write
 
 jobs:
-  build-mac:
-    runs-on: macos-14
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            flag: --mac
+          - os: windows-latest
+            flag: --win
+          - os: ubuntu-latest
+            flag: --linux
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,10 +36,11 @@ jobs:
 
       - run: npm run build
 
-      # electron-builder publishes the DMG/ZIP artifacts to the GitHub
-      # Release matching the pushed tag (creating it if needed).
-      - run: npx electron-builder --mac --publish always
+      # electron-builder publishes each platform's artifacts to the GitHub
+      # Release matching the pushed tag (creating it if needed). All three
+      # jobs append to the same release.
+      - run: npx electron-builder ${{ matrix.flag }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Unsigned build: no identity configured (see electron-builder.yml).
+          # Unsigned builds: no code-signing identity/certificate configured.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

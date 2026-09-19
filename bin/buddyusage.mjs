@@ -7,9 +7,9 @@
  * reports the last-known values). Zero dependencies by design so it can be
  * run via `npx`/`npm i -g` straight from the GitHub repo.
  */
-import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, mkdtempSync, rmSync, mkdirSync, copyFileSync, chmodSync } from 'node:fs'
 import { homedir, platform, tmpdir, arch as osArch } from 'node:os'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
 import { execFileSync, spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
@@ -96,16 +96,28 @@ function status(args) {
   }
 }
 
-function open() {
-  if (platform() !== 'darwin') {
-    console.error('`open` is only supported on macOS right now.')
-    process.exit(1)
-  }
-  try {
+const WIN_EXE = join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'Programs', APP_NAME, `${APP_NAME}.exe`)
+const LINUX_APPIMAGE = join(homedir(), '.local', 'bin', `${APP_NAME}.AppImage`)
+
+function launch() {
+  const os = platform()
+  if (os === 'darwin') {
     execFileSync('open', ['-a', APP_NAME], { stdio: 'ignore' })
+  } else if (os === 'win32') {
+    if (!existsSync(WIN_EXE)) throw new Error(`${WIN_EXE} not found`)
+    spawn(WIN_EXE, [], { detached: true, stdio: 'ignore' }).unref()
+  } else {
+    if (!existsSync(LINUX_APPIMAGE)) throw new Error(`${LINUX_APPIMAGE} not found`)
+    spawn(LINUX_APPIMAGE, [], { detached: true, stdio: 'ignore' }).unref()
+  }
+}
+
+function open() {
+  try {
+    launch()
     console.log(`${APP_NAME} launched.`)
   } catch {
-    console.error(`${APP_NAME}.app isn't installed. Run \`buddyusage install\`.`)
+    console.error(`${APP_NAME} isn't installed. Run \`buddyusage install\`.`)
     process.exit(1)
   }
 }
@@ -122,11 +134,44 @@ async function download(url, dest) {
   await pipeline(Readable.fromWeb(res.body), createWriteStream(dest))
 }
 
-async function install(args) {
-  if (platform() !== 'darwin') {
-    console.error('Installer currently supports macOS only. Download a build from https://github.com/' + REPO + '/releases')
-    process.exit(1)
+function assetNameFor(os, arch) {
+  if (os === 'darwin') return `${APP_NAME}-${arch}.dmg`
+  if (os === 'win32') return `${APP_NAME}-${arch}.exe`
+  return `${APP_NAME}-${arch}.AppImage`
+}
+
+async function installMac(file) {
+  const mount = join(dirname(file), 'mnt')
+  console.log('Mounting…')
+  execFileSync('hdiutil', ['attach', file, '-nobrowse', '-quiet', '-mountpoint', mount])
+  try {
+    const dest = `/Applications/${APP_NAME}.app`
+    console.log(`Installing to ${dest}…`)
+    rmSync(dest, { recursive: true, force: true })
+    execFileSync('cp', ['-R', join(mount, `${APP_NAME}.app`), dest])
+    // The build is unsigned (no Apple Developer ID); without this Gatekeeper
+    // reports the app as "damaged" the first time it's opened.
+    execFileSync('xattr', ['-dr', 'com.apple.quarantine', dest])
+  } finally {
+    execFileSync('hdiutil', ['detach', mount, '-quiet'])
   }
+}
+
+function installWindows(file) {
+  // One-click NSIS installer: installs per-user and launches when done.
+  console.log('Running installer…')
+  execFileSync(file, ['/S'], { stdio: 'ignore' })
+}
+
+function installLinux(file) {
+  mkdirSync(dirname(LINUX_APPIMAGE), { recursive: true })
+  copyFileSync(file, LINUX_APPIMAGE)
+  chmodSync(LINUX_APPIMAGE, 0o755)
+  console.log(`Installed to ${LINUX_APPIMAGE} (make sure ~/.local/bin is on your PATH).`)
+}
+
+async function install(args) {
+  const os = platform()
   const versionArg = args.find((a) => a.startsWith('--version='))?.split('=')[1]
   const releaseUrl = versionArg
     ? `https://api.github.com/repos/${REPO}/releases/tags/${versionArg}`
@@ -135,32 +180,25 @@ async function install(args) {
   console.log(`Looking up ${versionArg ?? 'latest'} release…`)
   const release = await fetchJson(releaseUrl)
   const arch = osArch() === 'arm64' ? 'arm64' : 'x64'
-  const asset = release.assets?.find((a) => a.name === `${APP_NAME}-${arch}.dmg`)
-  if (!asset) throw new Error(`No ${APP_NAME}-${arch}.dmg in release ${release.tag_name}.`)
+  const wanted = assetNameFor(os, arch)
+  const asset = release.assets?.find((a) => a.name === wanted)
+  if (!asset) throw new Error(`No ${wanted} in release ${release.tag_name}.`)
 
   const work = mkdtempSync(join(tmpdir(), 'buddyusage-'))
-  const dmg = join(work, asset.name)
+  const file = join(work, asset.name)
   console.log(`Downloading ${asset.name} (${(asset.size / 1e6).toFixed(1)} MB)…`)
-  await download(asset.browser_download_url, dmg)
+  await download(asset.browser_download_url, file)
 
-  const mount = join(work, 'mnt')
-  console.log('Mounting…')
-  execFileSync('hdiutil', ['attach', dmg, '-nobrowse', '-quiet', '-mountpoint', mount])
   try {
-    const src = join(mount, `${APP_NAME}.app`)
-    const dest = `/Applications/${APP_NAME}.app`
-    console.log(`Installing to ${dest}…`)
-    rmSync(dest, { recursive: true, force: true })
-    execFileSync('cp', ['-R', src, dest])
-    // The build is unsigned (no Apple Developer ID); without this Gatekeeper
-    // reports the app as "damaged" the first time it's opened.
-    execFileSync('xattr', ['-dr', 'com.apple.quarantine', dest])
+    if (os === 'darwin') await installMac(file)
+    else if (os === 'win32') installWindows(file)
+    else installLinux(file)
   } finally {
-    execFileSync('hdiutil', ['detach', mount, '-quiet'])
     rmSync(work, { recursive: true, force: true })
   }
+
   console.log(`Installed ${APP_NAME} ${release.tag_name}. Launching…`)
-  spawn('open', ['-a', APP_NAME], { detached: true, stdio: 'ignore' }).unref()
+  if (os !== 'win32') launch()
 }
 
 function help() {
@@ -171,7 +209,7 @@ Usage:
   buddyusage open                Launch the ${APP_NAME} app
   buddyusage install [--version=vX.Y.Z]
                                  Download the latest release from GitHub and
-                                 install it to /Applications (macOS)
+                                 install it (macOS, Windows, Linux)
   buddyusage path                Print the cache file the app writes
   buddyusage help                This message`)
 }
