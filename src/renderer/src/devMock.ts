@@ -9,7 +9,7 @@ export function installDevMock(): void {
   const providers: ProviderMeta[] = [
     { id: 'claude', name: 'Claude', color: '#D97757', usageUrl: 'https://claude.ai/settings/usage' },
     { id: 'codex', name: 'Codex', color: '#10A37F', usageUrl: 'https://chatgpt.com/codex/settings/usage' },
-    { id: 'gemini', name: 'Gemini', color: '#4285F4', usageUrl: 'https://aistudio.google.com/usage' }
+    { id: 'gemini', name: 'Gemini', color: '#4285F4', usageUrl: 'https://gemini.google.com/app' }
   ]
   const now = new Date().toISOString()
   const snapshots: UsageSnapshot[] = [
@@ -36,7 +36,8 @@ export function installDevMock(): void {
       providerId: 'gemini',
       status: 'ok',
       lastSyncedAt: now,
-      metrics: [{ id: 'daily', label: 'Daily limit', percentUsed: 52, resetLabel: 'in 6 hr' }]
+      metrics: [{ id: 'session', label: 'Current session', percentUsed: 52, resetLabel: 'in 2 hr 10 min' },
+        { id: 'weekly', label: 'Weekly limit', percentUsed: 18, resetLabel: 'Sun 12:00 AM' }]
     }
   ]
   let settings: AppSettings = {

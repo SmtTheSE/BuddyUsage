@@ -12,7 +12,7 @@ const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 // connection, an SPA that never fires 'did-finish-load'). Without a hard
 // ceiling here, that provider would sit in "loading" forever and never
 // surface a retry — observed live against a real provider during development.
-const SCRAPE_TIMEOUT_MS = 25_000
+const SCRAPE_TIMEOUT_MS = 40_000
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))

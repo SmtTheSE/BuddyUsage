@@ -24,6 +24,10 @@ export default defineConfig({
       // across versions; plain CJS (.js) is the battle-tested path and
       // matches the '../preload/index.js' path notchWindow.ts loads.
       rollupOptions: {
+        input: {
+          index: resolve('src/preload/index.ts'),
+          identity: resolve('src/preload/identity.ts')
+        },
         output: {
           format: 'cjs',
           entryFileNames: '[name].js'
