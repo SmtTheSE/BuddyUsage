@@ -82,6 +82,13 @@
     section { padding: 88px 0; }
     .rule { border-top: 1px solid var(--line); }
 
+    /* tour: three real screenshots */
+    .tour { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 36px; align-items: start; }
+    .shot { margin: 0; }
+    .shot img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 20px; background: var(--dark); }
+    .shot figcaption { margin-top: 14px; font-size: 16px; line-height: 1.5; color: var(--ink-2); }
+    .shot figcaption .label { display: block; margin-bottom: 6px; }
+
     /* feature row: media + text */
     .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
     .feature-row img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: right 40%; border-radius: 20px; background: var(--dark); display: block; }
@@ -138,7 +145,7 @@
 
     /* footer */
     footer { border-top: 1px solid var(--line); padding: 48px 0 40px; font-family: var(--sans); font-size: 13.5px; }
-    .foot { display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 32px; }
+    .foot { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
     .foot h4 { margin: 0 0 12px; font-size: 13.5px; font-weight: 600; }
     .foot ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
     .foot a { text-decoration: none; color: var(--ink-2); }
@@ -146,7 +153,7 @@
     .foot .copy { color: var(--ink-3); line-height: 1.6; }
 
     @media (max-width: 900px) {
-      .hero__grid, .feature-row, .row { grid-template-columns: 1fr; gap: 24px; }
+      .hero__grid, .feature-row, .row, .tour { grid-template-columns: 1fr; gap: 24px; }
       .cards { grid-template-columns: 1fr; }
       .foot { grid-template-columns: 1fr 1fr; }
       .nav-links > a { display: none; }
@@ -167,10 +174,8 @@
     <div class="wrap">
       <a class="wordmark" href="#"><img src="icon.png" alt="" />BuddyUsage</a>
       <div class="nav-links">
-        <a href="#product">Product</a>
-        <a href="#providers">Providers</a>
+        <a href="#tour">Product</a>
         <a href="#install">Install</a>
-        <a href="#faq">FAQ</a>
         <a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a>
         <span class="btn btn-dark btn-split"><a href="#install">Download</a><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest" target="_blank" rel="noopener" aria-label="All downloads">⌄</a></span>
       </div>
@@ -185,7 +190,7 @@
           <p class="hero__lede">A limit should never be a surprise. BuddyUsage is a small island on the edge of your screen that shows how much of your Claude, ChatGPT, Gemini, Cursor and Copilot plan you have used, and when each limit resets.</p>
           <div class="hero__cta">
             <a class="btn btn-dark" id="dl-primary" href="#install">Download</a>
-            <a class="btn btn-light" href="#product">Learn more</a>
+            <a class="btn btn-light" href="#tour">See it</a>
           </div>
           <p class="hero__note" id="cta-note">Free and open source · macOS, Windows, Linux</p>
         </div>
@@ -197,121 +202,22 @@
     </div>
   </header>
 
-  <section id="product">
+  <section id="tour">
     <div class="wrap">
-      <div class="feature-row">
-        <img src="shot-update.jpg" alt="The Gemini card with an in-app update banner" loading="lazy" width="960" height="1280" />
-        <div>
-          <h2 class="serif-h">One ring per assistant. Everything else, one hover away.</h2>
-          <p class="muted">Each ring is coloured by how close you are to the limit. Hover for session and weekly limits with countdowns that tick live. Click to pin the card. Drag the island anywhere and it snaps to the nearest edge; collapse it to a slim tab when you want the screen back. New versions install with one click, right from the card.</p>
-          <a class="link" href="#install">Install BuddyUsage</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="providers" class="rule">
-    <div class="wrap">
-      <h2 class="display">Supported assistants</h2>
-      <div class="list">
-        <div class="row">
-          <div>
-            <h3 class="serif-h">Claude</h3>
-            <p class="muted">Reads claude.ai, Settings, Usage: the current session limit and weekly limits per model family, each with its reset time.</p>
-            <a class="link" href="https://claude.ai/settings/usage" target="_blank" rel="noopener">Open dashboard</a>
-          </div>
-          <div class="meta">
-            <div><div class="label">Meters</div>Session, weekly</div>
-            <div><div class="label">Paid plans</div>Pro, Max, Team</div>
-            <div><div class="label">Free plan</div>No meter published; shown as Free</div>
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <h3 class="serif-h">ChatGPT and Codex</h3>
-            <p class="muted">ChatGPT publishes no meter for chat. The Codex limits page is the one meter tied to a ChatGPT account, so that is what is shown.</p>
-            <a class="link" href="https://chatgpt.com/codex/settings/usage" target="_blank" rel="noopener">Open dashboard</a>
-          </div>
-          <div class="meta">
-            <div><div class="label">Meters</div>5-hour, weekly</div>
-            <div><div class="label">Paid plans</div>Plus, Pro, Team</div>
-            <div><div class="label">Free plan</div>No meter published</div>
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <h3 class="serif-h">Gemini</h3>
-            <p class="muted">Reads the Gemini app's Usage limits panel: current usage with a 5-hour reset and a weekly limit. Google shows it on every plan.</p>
-            <a class="link" href="https://gemini.google.com/app" target="_blank" rel="noopener">Open dashboard</a>
-          </div>
-          <div class="meta">
-            <div><div class="label">Meters</div>Current, weekly</div>
-            <div><div class="label">Paid plans</div>AI Plus, Pro, Ultra</div>
-            <div><div class="label">Free plan</div>Real gauges</div>
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <h3 class="serif-h">Cursor</h3>
-            <p class="muted">Reads the Cursor dashboard: included usage per model pool in dollars, resetting with the billing cycle. Off by default; switch on in Settings.</p>
-            <a class="link" href="https://cursor.com/dashboard?tab=usage" target="_blank" rel="noopener">Open dashboard</a>
-          </div>
-          <div class="meta">
-            <div><div class="label">Meters</div>Included usage</div>
-            <div><div class="label">Paid plans</div>Pro, Ultra, Teams</div>
-            <div><div class="label">Free plan</div>Hobby, once used</div>
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <h3 class="serif-h">GitHub Copilot</h3>
-            <p class="muted">Reads GitHub, Settings, Billing, Metered usage: AI Credits used of included, or premium requests on legacy plans. Off by default.</p>
-            <a class="link" href="https://github.com/settings/billing/usage" target="_blank" rel="noopener">Open dashboard</a>
-          </div>
-          <div class="meta">
-            <div><div class="label">Meters</div>AI Credits</div>
-            <div><div class="label">Paid plans</div>Pro, Pro+, Business</div>
-            <div><div class="label">Free plan</div>Metered, once used</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="statement rule">
-    <div class="wrap">
-      <h2 class="serif-h">Usage limits shape how you work. They should be visible.</h2>
-    </div>
-  </div>
-
-  <section class="rule" id="how">
-    <div class="wrap">
-      <h2 class="display">How it works</h2>
-      <div class="cards">
-        <a class="card" href="#faq">
-          <div><h3 class="serif-h">Reads what you can already see</h3><p>A hidden window signed in to your account reads the same Settings and Usage page you would open yourself.</p></div>
-          <div class="label">Privacy</div>
-        </a>
-        <a class="card" href="#faq">
-          <div><h3 class="serif-h">Syncs on its own</h3><p>When you use a tool, when a limit resets, after sleep, and whenever you open a card. Nothing is requested twice.</p></div>
-          <div class="label">Freshness</div>
-        </a>
-        <a class="card" href="#faq">
-          <div><h3 class="serif-h">Honest on free plans</h3><p>Where a provider publishes no meter, the ring says Free and the card explains, instead of showing an error.</p></div>
-          <div class="label">Every plan</div>
-        </a>
-        <a class="card" href="#install">
-          <div><h3 class="serif-h">Installs in a minute</h3><p>Native builds for macOS, Windows and Linux. Updates itself afterwards with one click inside the app.</p></div>
-          <div class="label">Install</div>
-        </a>
-        <a class="card" href="#faq">
-          <div><h3 class="serif-h">Stays out of the way</h3><p>Drag it to any edge of any display. Collapse it to a slim tab with status dots. Optional menu-bar readout.</p></div>
-          <div class="label">Design</div>
-        </a>
-        <a class="card" href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">
-          <div><h3 class="serif-h">Open source</h3><p>MIT licensed. Adding an assistant is one file and one registry line. Read the code, file an issue, send a pull request.</p></div>
-          <div class="label">GitHub</div>
-        </a>
+      <h2 class="display">Everything else, one hover away.</h2>
+      <div class="tour">
+        <figure class="shot">
+          <img src="shot-update.jpg" alt="The Gemini card open with limits and a one-click update banner" loading="lazy" width="960" height="1280" />
+          <figcaption><span class="label">Cards</span>Hover a ring for session and weekly limits with live countdowns. Updates install with one click, right from the card.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="shot-collapsed.jpg" alt="The island collapsed to a slim tab with three status dots" loading="lazy" width="960" height="1280" />
+          <figcaption><span class="label">Collapsed</span>Tuck it into a slim tab with status dots. Hover to peek. Drag it anywhere and it snaps to the nearest edge.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="shot-settings.jpg" alt="Settings: provider switches, refresh interval, screen edge, appearance" loading="lazy" width="940" height="1520" />
+          <figcaption><span class="label">Settings</span>Pick your assistants, refresh rate, screen edge and appearance. Everything on one screen.</figcaption>
+        </figure>
       </div>
     </div>
   </section>
@@ -394,29 +300,14 @@ brew install --cask buddyusage</pre>
     </div>
   </section>
 
-  <section id="faq" class="rule">
-    <div class="wrap">
-      <h2 class="display">Questions</h2>
-      <div class="faq">
-        <details><summary>How does it know my usage?</summary><p>It reads the same Settings and Usage page you would open in a browser, in a hidden window signed in to your account. Nothing leaves your machine. There is no BuddyUsage server and no analytics.</p></details>
-        <details><summary>Does it work on a free plan?</summary><p>Yes. Gemini publishes usage limits on every plan, so free users get real gauges. Claude and ChatGPT do not show percentages on free plans, so the ring says Free and the card explains instead of showing an error.</p></details>
-        <details><summary>Why does my Mac warn me the first time?</summary><p>The app is not notarized with a paid Apple Developer ID, so Gatekeeper asks once. It is a standard step for open-source Mac apps: System Settings, Privacy &amp; Security, Open Anyway. The Terminal installer avoids the prompt entirely.</p></details>
-        <details><summary>Will it slow my machine down or hammer the sites?</summary><p>It polls every few minutes and otherwise reacts to real events: you using a tool, a limit resetting, waking from sleep. Every trigger funnels into one fetch per provider, so nothing is requested twice.</p></details>
-        <details><summary>Can I move it, hide it, change it?</summary><p>Drag it anywhere and it snaps to the nearest edge of any display. The handle collapses it to a slim tab. Settings lets you pick providers, refresh rate, edge, appearance, and an optional menu-bar readout.</p></details>
-        <details><summary>How do updates work?</summary><p>BuddyUsage checks GitHub Releases in the background. When there is a new version you will see a dot on the island and an Update button. One click installs it and restarts. A download link is always there too.</p></details>
-      </div>
-    </div>
-  </section>
-
   <footer>
     <div class="wrap foot">
       <div>
         <div class="wordmark" style="margin-bottom:12px"><img src="icon.png" alt="" />BuddyUsage</div>
         <p class="copy">© 2026 BuddyUsage · MIT License<br />Not affiliated with Anthropic, OpenAI, Google, Cursor or GitHub.</p>
       </div>
-      <div><h4>Product</h4><ul><li><a href="#product">Overview</a></li><li><a href="#providers">Supported assistants</a></li><li><a href="#how">How it works</a></li><li><a href="#faq">Questions</a></li></ul></div>
-      <div><h4>Install</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">macOS, Apple Silicon</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">macOS, Intel</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe">Windows</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage">Linux</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases">All releases</a></li></ul></div>
-      <div><h4>Project</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/issues" target="_blank" rel="noopener">Report an issue</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/blob/main/LICENSE" target="_blank" rel="noopener">License</a></li></ul></div>
+      <div><h4>Install</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">macOS, Apple Silicon</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">macOS, Intel</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe">Windows</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage">Linux</a></li></ul></div>
+      <div><h4>Project</h4><ul><li><a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/releases" target="_blank" rel="noopener">All releases</a></li><li><a href="https://github.com/SmtTheSE/BuddyUsage/issues" target="_blank" rel="noopener">Report an issue</a></li></ul></div>
     </div>
   </footer>
 
