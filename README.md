@@ -1,5 +1,7 @@
 # BuddyUsage
 
+**Website & install guide:** https://smtthese.github.io/BuddyUsage/
+
 A small island, docked to the edge of your screen, that shows how much
 of your **Claude**, **ChatGPT / Codex**, **Gemini**, **Cursor** and **GitHub Copilot** plan you've used —
 without alt-tabbing into each provider's website.
