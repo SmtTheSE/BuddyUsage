@@ -1,4 +1,5 @@
-import { defaultIsLoggedIn, type ProviderDefinition } from './types'
+import type { WebContents } from 'electron'
+import type { ProviderDefinition } from './types'
 import { parseUsageText, type MetricSpec } from './parseHeuristics'
 import { clickByText, extractDialogOrBodyText } from '../scraping/pageActions'
 
@@ -27,14 +28,39 @@ const metrics: MetricSpec[] = [
   }
 ]
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * gemini.google.com never redirects a signed-out visitor to a login URL —
+ * it serves an anonymous chat page with "Sign in" links — so the check has
+ * to look at the page, not just the address.
+ */
+async function geminiIsLoggedIn(contents: WebContents): Promise<boolean> {
+  const url = contents.getURL().toLowerCase()
+  if (url.includes('accounts.google.com')) return false
+  if (!url.includes('gemini.google.com')) return false
+
+  return contents.executeJavaScript(`(() => {
+    const signInLink = document.querySelector('a[href*="accounts.google.com/ServiceLogin"], a[href*="accounts.google.com/signin"], a[href*="accounts.google.com/AccountChooser"]')
+    if (signInLink) return false
+    const text = document.body ? document.body.innerText : ''
+    if (/sign in to save activity/i.test(text)) return false
+    return true
+  })()`)
+}
+
 export const geminiProvider: ProviderDefinition = {
   id: 'gemini',
   name: 'Gemini',
   color: '#4285F4',
   usageUrl: 'https://gemini.google.com/app',
+  // Go straight to Google's sign-in and bounce back to Gemini afterwards.
+  loginUrl: 'https://accounts.google.com/ServiceLogin?continue=https://gemini.google.com/app',
   sessionPartition: 'persist:gemini',
   metrics,
-  isLoggedIn: defaultIsLoggedIn,
+  isLoggedIn: geminiIsLoggedIn,
   extractRaw: async (contents) => {
     await wait(1500)
     // "Settings & help" lives in the sidebar; "Usage limits" is a menu item.
@@ -45,8 +71,4 @@ export const geminiProvider: ProviderDefinition = {
     return extractDialogOrBodyText(contents)
   },
   parse: (raw) => parseUsageText(raw, metrics)
-}
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
