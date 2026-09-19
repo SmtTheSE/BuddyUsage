@@ -83,3 +83,33 @@ jobs:
         run: gh release edit "${{ github.ref_name }}" --notes-file .github/release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Keep the Homebrew cask in step with the release so
+  # `brew install --cask --no-quarantine buddyusage` always gets the newest
+  # build with correct checksums. Uses the repo's own token — no extra secrets.
+  update-cask:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Render cask from release checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release download "$TAG" --pattern 'BuddyUsage-arm64.dmg' --pattern 'BuddyUsage-x64.dmg' --dir /tmp/dmg
+          arm=$(sha256sum /tmp/dmg/BuddyUsage-arm64.dmg | cut -d' ' -f1)
+          intel=$(sha256sum /tmp/dmg/BuddyUsage-x64.dmg | cut -d' ' -f1)
+          scripts/render-cask.sh "${TAG#v}" "$arm" "$intel" > Casks/buddyusage.rb
+
+      - name: Commit cask
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/buddyusage.rb
+          git diff --cached --quiet || git commit -m "Update Homebrew cask to ${{ github.ref_name }}"
+          git push origin main

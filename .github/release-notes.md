@@ -13,6 +13,15 @@ Not sure which Mac you have? Click the Apple menu → **About This Mac**: "Apple
 
 ## Install on Mac
 
+**Prefer no security prompt at all?** Use Homebrew (paste into Terminal):
+
+```
+brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
+brew install --cask --no-quarantine buddyusage
+```
+
+**Or the DMG:**
+
 1. Open the downloaded `.dmg` and drag **BuddyUsage** onto **Applications**.
 2. Open **Applications** and double-click **BuddyUsage**.
 3. If your Mac says it **"could not verify"** the app or that it's from an **unidentified developer**:

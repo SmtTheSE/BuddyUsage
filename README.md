@@ -11,37 +11,66 @@ resets). Right-click for sign-in, refresh, dashboard, settings.
 ## Install
 
 Builds ship for **macOS** (Apple Silicon + Intel), **Windows** (x64 + ARM64)
-and **Linux** (x64 + ARM64).
+and **Linux** (x64 + ARM64). BuddyUsage is open source (MIT) and its builds
+are not notarized with a paid Apple Developer ID, so pick the path that suits
+you:
 
-**macOS / Linux one-liner:**
+### macOS
+
+**Homebrew — no security prompt** (recommended):
+
+```bash
+brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
+brew install --cask --no-quarantine buddyusage
+```
+
+`--no-quarantine` matters: it's what stops Gatekeeper from flagging the app
+as "unverified". Upgrades: `brew upgrade --cask buddyusage`.
+
+**Installer script — no security prompt:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
 
-**Windows one-liner (PowerShell):**
+**DMG — one prompt on first launch:**
+[Apple Silicon](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg) ·
+[Intel](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg).
+Drag to Applications; the DMG window itself shows the steps. On first
+launch macOS says it *"could not verify"* the app → **System Settings →
+Privacy & Security → Open Anyway** (older macOS: right-click → Open). Once.
+
+### Windows
+
+[x64 installer](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe) ·
+[ARM64 installer](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe),
+or in PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.ps1 | iex
 ```
 
-**Direct downloads (always the latest release):**
+SmartScreen may show *"Windows protected your PC"* → **More info → Run
+anyway** (once).
 
-| Platform | Link |
-| --- | --- |
-| macOS · Apple Silicon | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg |
-| macOS · Intel | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg |
-| Windows · x64 (Intel/AMD) | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.exe |
-| Windows · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.exe |
-| Linux · x64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage |
-| Linux · ARM64 | https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage |
+### Linux
 
-**First launch on a Mac.** If macOS says it *"could not verify"* the app,
-open **System Settings → Privacy & Security** and click **Open Anyway**
-(older macOS: right-click the app → Open). Once. Windows may show
-*"Windows protected your PC"* → **More info → Run anyway**. These prompts
-disappear entirely on builds signed with a Developer ID / code-signing
-certificate — see [Signed releases](#signed-releases-no-security-prompts).
+[x86_64 AppImage](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x86_64.AppImage) ·
+[ARM64 AppImage](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage),
+or `curl -fsSL …/install.sh | bash` as above. Make it executable and run.
+
+### Why the macOS prompt exists, and how to remove it
+
+Gatekeeper flags any browser download that isn't notarized by Apple, and
+notarization requires a paid Apple Developer ID — there is no open-source
+workaround for the DMG path. What *is* open-source-friendly: installs that
+don't come through a browser (Homebrew with `--no-quarantine`, the curl
+script) carry no quarantine flag and open cleanly. If a Developer ID becomes
+available, see [Signed releases](#signed-releases-no-security-prompts) —
+the pipeline notarizes automatically and the DMG prompt disappears too.
+For Windows, [SignPath Foundation](https://signpath.org/foundation) signs
+open-source projects for free; the workflow accepts a standard `.pfx` via
+`WIN_CSC_LINK` once one is issued.
 
 **CLI** (reads the same data the app collects, works even when the app isn't running):
 
