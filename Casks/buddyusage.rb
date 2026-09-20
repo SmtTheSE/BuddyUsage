@@ -1,9 +1,9 @@
 cask "buddyusage" do
   arch arm: "arm64", intel: "x64"
 
-  version "0.4.0"
-  sha256 arm:   "9f4cfca8044e8a86585e3560c6d3f78e73fa3950113dc2fefa4e81870a326f66",
-         intel: "870993f513d32fe4f624f7877eb4ec37a5144ad0c993245a8e6493cbc041403a"
+  version "0.4.1"
+  sha256 arm:   "43987e456306debf1cd102477e791f3b71ee7f666cecc2be12cba146749b900b",
+         intel: "aa12a5571ae6996ab4440bbb79c57c24e22aaa8f89543358f35b19877a1d6b9f"
 
   url "https://github.com/SmtTheSE/BuddyUsage/releases/download/v#{version}/BuddyUsage-#{arch}.dmg"
   name "BuddyUsage"
