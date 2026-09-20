@@ -78,7 +78,17 @@ export const geminiProvider: ProviderDefinition = {
     await wait(1500)
     return extractDialogOrBodyText(contents)
   },
-  parse: (raw) => parseUsageText(raw, metrics),
+  parse: (raw) => {
+    const parsed = parseUsageText(raw, metrics)
+    if (!parsed) return undefined
+    // The page is a whole chat app: a stray "Plus" in a chat title or an
+    // "Upgrade to Google AI Pro" pitch must not become the plan badge.
+    // Only an explicit plan name counts; otherwise show no badge.
+    const explicit = /Google AI (Plus|Pro|Ultra)\b|\b(Plus|Pro|Ultra) plan\b/i.exec(raw)
+    // The panel's own upsell ("Get 2x more usage with AI Plus") marks a free account.
+    const free = /more usage with AI (?:Plus|Pro)/i.test(raw)
+    return { ...parsed, planLabel: explicit ? (explicit[1] ?? explicit[2]) : free ? 'Free' : undefined }
+  },
   // The panel opened but shows only the explainer ("Your usage over a
   // 5-hour window") with no figures: this account has no meter yet.
   noMeter: (raw) => /current usage/i.test(raw) && /weekly limit/i.test(raw) && !/\d+\s?%/.test(raw)

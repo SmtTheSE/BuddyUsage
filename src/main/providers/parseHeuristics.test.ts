@@ -336,3 +336,14 @@ describe('Gemini panel without figures', () => {
     expect(geminiProvider.noMeter?.('Current usage\n37% used\nWeekly limit\n12% used')).toBe(false)
   })
 })
+
+describe('Gemini plan badge', () => {
+  // Captured live: a free account's panel carries an "AI Plus" upsell that must not read as the plan.
+  const FREE_PANEL = 'Usage limits\nUpdated just now\nCurrent usage\n0% used\nResets at 6:07 AM\nWeekly limit\nResets Sep 22 at 11:07 PM\n1% used\nGet 2x more usage with AI Plus\n₫132,000/month\nUpgrade'
+  it('reads the upsell as Free, not Plus', async () => {
+    const { geminiProvider } = await import('./gemini')
+    const parsed = geminiProvider.parse(FREE_PANEL)
+    expect(parsed?.planLabel).toBe('Free')
+    expect(parsed?.metrics.map((m) => m.percentUsed)).toEqual([0, 1])
+  })
+})

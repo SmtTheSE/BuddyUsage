@@ -1,4 +1,6 @@
-import type { BrowserWindow } from 'electron'
+import { app, type BrowserWindow } from 'electron'
+import { mkdirSync, writeFileSync } from 'fs'
+import { join } from 'path'
 import type { ProviderDefinition } from '../providers/types'
 import type { UsageSnapshot } from '@shared/types'
 import { getProviderWindow } from './windowPool'
@@ -99,6 +101,23 @@ async function readUntilStable(
   }
 }
 
+/**
+ * With BUDDYUSAGE_DEBUG_SHOTS=1, a screenshot of what the hidden window
+ * saw is written next to the cache after every read — the quickest way to
+ * settle "is that really what the page says?".
+ */
+async function saveDebugShot(provider: ProviderDefinition, win: BrowserWindow): Promise<void> {
+  if (process.env.BUDDYUSAGE_DEBUG_SHOTS !== '1' || win.isDestroyed()) return
+  try {
+    const dir = join(app.getPath('userData'), 'debug')
+    mkdirSync(dir, { recursive: true })
+    const image = await win.webContents.capturePage()
+    writeFileSync(join(dir, `${provider.id}.png`), image.toPNG())
+  } catch {
+    /* debugging aid only */
+  }
+}
+
 /** A failed refresh keeps the last good reading visible instead of blanking the gauge. */
 function carryOverGoodFields(previous?: UsageSnapshot): Pick<UsageSnapshot, 'planLabel' | 'metrics'> {
   if (previous?.status !== 'ok') return { metrics: [] }
@@ -119,6 +138,7 @@ async function performScrape(
   }
 
   const { raw, parsed } = await readUntilStable(provider, win)
+  await saveDebugShot(provider, win)
 
   if (parsed) {
     const now = new Date()
