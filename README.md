@@ -109,7 +109,7 @@ honest states rather than errors:
 | --- | --- | --- |
 | **Claude** (claude.ai → Settings → Usage) | Current session + weekly limits with reset times | Anthropic publishes no percentages; the ring shows **Free** and the card explains — the app tells you when you hit the limit |
 | **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits, read from OpenAI's own usage endpoint — the exact `used_percent` and reset timestamps the Codex CLI's `/status` shows (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
-| **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
+| **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets; the plan badge only appears when the page names the plan | **Real gauges** — Google shows the panel for free accounts too (badge: Free). Flash-Lite chats barely move it; Pro/Thinking models and the Gemini CLI do |
 | **Cursor** (cursor.com → Dashboard → Usage) · off by default | Included usage per model pool in dollars, monthly reset | Hobby plan shows included usage once used |
 | **GitHub Copilot** (github.com → Settings → Billing → Metered usage) · off by default | AI Credits used of included (legacy plans: premium requests), monthly reset | Copilot Free shows metered usage once there is any |
 
@@ -120,7 +120,7 @@ cloud, nothing leaves the computer.
 
 | Feature | What it does |
 | --- | --- |
-| **Live presence** | Each ring shows a breathing dot while a `claude` / `codex` / `gemini` session is running (a count when there are several). The card lists every session with its project and how long it has run. |
+| **Live presence** | Each ring shows a breathing dot while a `claude` / `codex` / `gemini` **command-line** session is running on this computer (a count when there are several). The card lists every session with its project and how long it has run; the block is hidden when nothing is running. Browser chats are not sessions — the app cannot reach into a tab. |
 | **Stop** | Interrupts a session the way Ctrl-C would (`SIGINT`), so the CLI saves the conversation and exits; it can be resumed later with `claude --resume`, `codex resume`, `gemini --resume`. Escalates to a hard kill if it does not go. On Windows both are a hard stop (the OS has no cross-process Ctrl-C); the conversation is still on disk. |
 | **Jump** | Brings the terminal app hosting that session to the front. |
 | **Nudge** | A one-line message to the latest conversation of that provider, sent headlessly (`claude -p --resume <id>`, `codex exec resume <id>`, `gemini --resume latest -p`) in the session's own project directory; the reply shows inline and lands in the agent's transcript too. Best used when the session is idle or waiting. |
@@ -154,6 +154,10 @@ what reaches the ring:
 If a number still looks wrong, right-click that ring → **Copy diagnostics**
 and paste the result into an issue. It contains the parsed reading and the
 exact text or JSON it was parsed from, so the fix is usually a one-liner.
+To see what the hidden window itself saw, launch with
+`BUDDYUSAGE_DEBUG_SHOTS=1`: a screenshot per provider is written to
+`<userData>/debug/` after every read (macOS: `~/Library/Application
+Support/BuddyUsage/debug/`).
 
 ## Updates
 
