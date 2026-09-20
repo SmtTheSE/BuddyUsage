@@ -14,14 +14,21 @@ import { primaryMetric } from '@shared/types'
 
 let tray: Tray | null = null
 
+/** A tray with an empty image is invisible on Windows — surface a missing asset loudly instead. */
+function loadTrayAsset(path: string): Electron.NativeImage {
+  const image = nativeImage.createFromPath(path)
+  if (image.isEmpty()) console.error(`[tray] icon asset missing or unreadable: ${path}`)
+  return image
+}
+
 function buildTrayImage(): Electron.NativeImage {
   // macOS recolours template images itself; Windows/Linux taskbars need a
   // fixed-colour glyph (white reads on both light and dark trays).
-  if (process.platform !== 'darwin') return nativeImage.createFromPath(trayIconColor)
+  if (process.platform !== 'darwin') return loadTrayAsset(trayIconColor)
 
   const image = nativeImage.createEmpty()
-  image.addRepresentation({ scaleFactor: 1, dataURL: nativeImage.createFromPath(trayIcon1x).toDataURL() })
-  image.addRepresentation({ scaleFactor: 2, dataURL: nativeImage.createFromPath(trayIcon2x).toDataURL() })
+  image.addRepresentation({ scaleFactor: 1, dataURL: loadTrayAsset(trayIcon1x).toDataURL() })
+  image.addRepresentation({ scaleFactor: 2, dataURL: loadTrayAsset(trayIcon2x).toDataURL() })
   // Template images let macOS recolour the glyph for light/dark menu bars.
   image.setTemplateImage(true)
   return image

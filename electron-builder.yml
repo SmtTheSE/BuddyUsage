@@ -11,6 +11,9 @@ directories:
 files:
   - out/**/*
   - package.json
+  # Tray glyphs are loaded by path at runtime (`?asset` imports resolve to
+  # <app>/resources/...), so they must ship alongside the bundle.
+  - resources/**/*
 
 mac:
   category: public.app-category.developer-tools
