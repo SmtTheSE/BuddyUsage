@@ -34,6 +34,8 @@ export interface ProviderDefinition {
   extractRaw: (contents: WebContents) => Promise<string>
   /** Pure, unit-testable: turn raw text into structured usage data. */
   parse: (raw: string) => ParsedUsage | undefined
+  /** Signed in, page read fine, but this account shows no figures (provider-specific wording). */
+  noMeter?: (raw: string) => boolean
 }
 
 /** Default `isLoggedIn`: true unless the final URL looks like an auth/login page. */

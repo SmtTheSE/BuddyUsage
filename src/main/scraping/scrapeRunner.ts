@@ -138,9 +138,10 @@ async function performScrape(
     return { providerId: provider.id, status: 'logged_out', message: 'Sign in required', metrics: [], lastSyncedAt: nowIso }
   }
 
-  // Signed in, but the plan publishes no meter (Free on Claude/ChatGPT):
-  // say so plainly, and surface a reset time if the page mentions one.
-  if (looksFreeTier(raw)) {
+  // Signed in, but the plan publishes no meter (Free on Claude/ChatGPT,
+  // or a provider-specific "explainer only" panel): say so plainly, and
+  // surface a reset time if the page mentions one.
+  if (looksFreeTier(raw) || provider.noMeter?.(raw)) {
     const reset = findResetPhrase(raw)
     return {
       providerId: provider.id,

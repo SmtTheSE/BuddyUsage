@@ -1,7 +1,7 @@
 import type { WebContents } from 'electron'
 import type { ProviderDefinition } from './types'
 import { parseUsageText, type MetricSpec } from './parseHeuristics'
-import { clickByText, extractDialogOrBodyText } from '../scraping/pageActions'
+import { clickByText, closeDialogs, extractDialogOrBodyText, openDialogText } from '../scraping/pageActions'
 
 /**
  * Google AI Plus / Pro / Ultra usage (which the Gemini CLI and app draw
@@ -60,16 +60,30 @@ export const geminiProvider: ProviderDefinition = {
   sessionPartition: 'persist:gemini',
   metrics,
   activityPaths: ['.gemini/tmp'],
-  freeTierNote: 'Gemini publishes usage limits for every plan, including free. If nothing shows, open the Gemini app once and try Refresh.',
+  freeTierNote: 'Gemini shows usage percentages on Google AI Plus, Pro and Ultra. This account has no meter yet: the panel only explains how limits work.',
   isLoggedIn: geminiIsLoggedIn,
   extractRaw: async (contents) => {
-    await wait(1500)
+    // Called repeatedly by the read-until-stable loop, so it must not
+    // click again once the panel is already showing: re-opening the menu
+    // toggles it away or lands on the "How limits work" explainer.
+    const showing = await openDialogText(contents)
+    if (isUsagePanel(showing)) return showing
+    if (showing.trim()) await closeDialogs(contents)
+
+    await wait(800)
     // "Settings & help" lives in the sidebar; "Usage limits" is a menu item.
     await clickByText(contents, /settings/i)
     await wait(800)
-    await clickByText(contents, /usage\s*limits?/i)
+    await clickByText(contents, /usage\s*limits?/i, 6000, /learn|how|about/i)
     await wait(1500)
     return extractDialogOrBodyText(contents)
   },
-  parse: (raw) => parseUsageText(raw, metrics)
+  parse: (raw) => parseUsageText(raw, metrics),
+  // The panel opened but shows only the explainer ("Your usage over a
+  // 5-hour window") with no figures: this account has no meter yet.
+  noMeter: (raw) => /current usage/i.test(raw) && /weekly limit/i.test(raw) && !/\d+\s?%/.test(raw)
+}
+
+function isUsagePanel(text: string): boolean {
+  return /current usage/i.test(text) && /\d+\s?%/.test(text)
 }

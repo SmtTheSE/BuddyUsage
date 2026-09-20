@@ -324,3 +324,15 @@ describe('parseUsageText (full pipeline)', () => {
     expect(parseUsageText('   ')).toBeUndefined()
   })
 })
+
+describe('Gemini panel without figures', () => {
+  // Captured live from an account whose Usage limits panel only carries the
+  // explainer copy — no percentages, no resets.
+  const EXPLAINER = 'How limits work\n\nCurrent usage\n\nYour usage over a 5-hour window.\n\nWeekly limit\n\nYour total usage for the week.'
+  it('is reported as no meter rather than a parse error', async () => {
+    const { geminiProvider } = await import('./gemini')
+    expect(geminiProvider.parse(EXPLAINER)).toBeUndefined()
+    expect(geminiProvider.noMeter?.(EXPLAINER)).toBe(true)
+    expect(geminiProvider.noMeter?.('Current usage\n37% used\nWeekly limit\n12% used')).toBe(false)
+  })
+})
