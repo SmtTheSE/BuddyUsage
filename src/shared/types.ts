@@ -75,6 +75,95 @@ export interface ProviderMeta {
   name: string
   color: string
   usageUrl: string
+  /** Whether this provider has a local CLI agent BuddyUsage can watch and steer. */
+  agent?: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Agents: the local CLI sessions (claude, codex, gemini) that spend the limits
+// ---------------------------------------------------------------------------
+
+export type AgentAttentionKind = 'permission' | 'idle' | 'finished'
+
+export interface AgentAttention {
+  kind: AgentAttentionKind
+  message?: string
+  at: string
+}
+
+export type AgentSessionState = 'running' | 'attention' | 'stopping'
+
+/** One live CLI session, found by process scan and enriched by hook events. */
+export interface AgentSession {
+  /** Stable id: `${providerId}:${pid}` for a process, `${providerId}:hook:${sessionId}` for a hook-only entry. */
+  id: string
+  providerId: ProviderId
+  pid?: number
+  /** Working directory of the session — the project it is working in. */
+  cwd?: string
+  project?: string
+  startedAt?: string
+  /** The CLI's own conversation id, when known — what a nudge or resume targets. */
+  sessionId?: string
+  /** The app hosting the terminal (Terminal, iTerm2, Code, Claude…), for "jump to it". */
+  hostApp?: string
+  state: AgentSessionState
+  attention?: AgentAttention
+  /** True when the limit guard stopped this session. */
+  pausedByGuard?: boolean
+}
+
+/** A session the limit guard stopped, kept so it can be resumed after the reset. */
+export interface PausedSession {
+  providerId: ProviderId
+  cwd?: string
+  project?: string
+  sessionId?: string
+  pausedAt: string
+  percentAtPause: number
+}
+
+export interface AgentsState {
+  sessions: AgentSession[]
+  paused: PausedSession[]
+  /** Whether process scanning works on this machine (false → only hook events are shown). */
+  scanAvailable: boolean
+}
+
+export interface NudgeResult {
+  providerId: ProviderId
+  ok: boolean
+  reply?: string
+  error?: string
+  /** Command that was run, for transparency. */
+  command: string
+}
+
+export type HookInstallStatus = 'installed' | 'not_installed' | 'conflict' | 'unsupported'
+
+export interface HookStatus {
+  providerId: ProviderId
+  status: HookInstallStatus
+  /** Human-readable detail: where it was installed, or what is in the way. */
+  detail?: string
+}
+
+export interface RemoteInfo {
+  enabled: boolean
+  /** Full URL to open on the phone, when enabled and a LAN address exists. */
+  url?: string
+  /** SVG markup of the QR code for `url`. */
+  qrSvg?: string
+  addresses: string[]
+  port: number
+}
+
+export interface LimitGuardSettings {
+  enabled: boolean
+  /** Primary-metric percentage at which running sessions are stopped. */
+  percent: number
+  /** Which providers the guard applies to; missing = true. */
+  providers: Record<ProviderId, boolean>
 }
 
 export type ScreenEdge = 'right' | 'left'
@@ -98,7 +187,17 @@ export interface AppSettings {
   onboardingSeen: boolean
   launchAtLogin: boolean
   theme: ThemeMode
+  /** Stop running agents when a provider's primary limit passes a threshold. */
+  limitGuard: LimitGuardSettings
+  /** System notifications for hook events (waiting for permission, finished). */
+  agentAlerts: boolean
+  /** Serve the phone page on the LAN. Off → hooks only, bound to localhost. */
+  remoteEnabled: boolean
+  /** Secret in the remote/hook URLs; regenerate to revoke. */
+  remoteToken: string
 }
+
+export const DEFAULT_LIMIT_GUARD_PERCENT = 90
 
 export const DEFAULT_REFRESH_INTERVAL_MINUTES = 3
 export const MIN_REFRESH_INTERVAL_MINUTES = 1
@@ -142,10 +241,24 @@ export const IpcChannel = {
   WindowSetIgnoreMouse: 'window:setIgnoreMouse',
   WindowShowContextMenu: 'window:showContextMenu',
   WindowOpenSettings: 'window:openSettings',
+  WindowSetFocusable: 'window:setFocusable',
   AppQuit: 'app:quit',
   UpdateGetState: 'update:getState',
   UpdateCheck: 'update:check',
   UpdateInstall: 'update:install',
   UpdateOpenDownload: 'update:openDownload',
-  UpdateState: 'update:state'
+  UpdateState: 'update:state',
+  AgentsGet: 'agents:get',
+  AgentsUpdated: 'agents:updated',
+  AgentsStop: 'agents:stop',
+  AgentsFocus: 'agents:focus',
+  AgentsNudge: 'agents:nudge',
+  AgentsResume: 'agents:resume',
+  AgentsResumeCommand: 'agents:resumeCommand',
+  AgentsDismissPaused: 'agents:dismissPaused',
+  HooksStatus: 'hooks:status',
+  HooksInstall: 'hooks:install',
+  HooksUninstall: 'hooks:uninstall',
+  RemoteInfo: 'remote:info',
+  RemoteRegenerate: 'remote:regenerate'
 } as const

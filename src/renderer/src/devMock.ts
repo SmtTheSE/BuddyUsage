@@ -7,9 +7,9 @@ import type { AppSettings, ProviderMeta, UsageSnapshot } from '@shared/types'
  */
 export function installDevMock(): void {
   const providers: ProviderMeta[] = [
-    { id: 'claude', name: 'Claude', color: '#D97757', usageUrl: 'https://claude.ai/settings/usage' },
-    { id: 'chatgpt', name: 'ChatGPT', color: '#10A37F', usageUrl: 'https://chatgpt.com/codex/settings/usage' },
-    { id: 'gemini', name: 'Gemini', color: '#4285F4', usageUrl: 'https://gemini.google.com/app' },
+    { id: 'claude', name: 'Claude', color: '#D97757', usageUrl: 'https://claude.ai/settings/usage', agent: true },
+    { id: 'chatgpt', name: 'ChatGPT', color: '#10A37F', usageUrl: 'https://chatgpt.com/codex/settings/usage', agent: true },
+    { id: 'gemini', name: 'Gemini', color: '#4285F4', usageUrl: 'https://gemini.google.com/app', agent: true },
     { id: 'cursor', name: 'Cursor', color: '#8B5CF6', usageUrl: 'https://cursor.com/dashboard?tab=usage' },
     { id: 'copilot', name: 'Copilot', color: '#6E7681', usageUrl: 'https://github.com/settings/billing/usage' }
   ]
@@ -72,7 +72,21 @@ export function installDevMock(): void {
     menuBarUsage: false,
     onboardingSeen: true,
     launchAtLogin: false,
-    theme
+    theme,
+    limitGuard: { enabled: true, percent: 90, providers: {} },
+    agentAlerts: true,
+    remoteEnabled: false,
+    remoteToken: 'devtoken'
+  }
+  const agents = {
+    scanAvailable: true,
+    paused: [],
+    sessions: quiet
+      ? []
+      : [
+          { id: 'claude:101', providerId: 'claude', pid: 101, cwd: '/Users/dev/web-app', project: 'web-app', startedAt: new Date(Date.now() - 42 * 60000).toISOString(), hostApp: '/Applications/iTerm.app', state: 'running' as const },
+          { id: 'claude:102', providerId: 'claude', pid: 102, cwd: '/Users/dev/infra', project: 'infra', startedAt: new Date(Date.now() - 5 * 60000).toISOString(), hostApp: '/Applications/iTerm.app', state: 'attention' as const, attention: { kind: 'permission' as const, message: 'Claude needs your permission to use Bash', at: new Date().toISOString() } }
+        ]
   }
   const noop = async (): Promise<void> => undefined
 
@@ -92,6 +106,24 @@ export function installDevMock(): void {
     onUsageUpdated: () => () => undefined,
     onSettingsUpdated: () => () => undefined,
     onSyncStateChanged: () => () => undefined,
+    setFocusable: noop,
+    getAgents: async () => agents,
+    onAgentsUpdated: () => () => undefined,
+    stopAgent: async () => true,
+    focusAgent: async () => true,
+    nudgeAgent: async (providerId, text) => ({ providerId, ok: true, reply: `(mock) Got it: "${text}". I'll stop after this file.`, command: 'claude -p --resume … "…"' }),
+    resumePaused: async () => 0,
+    resumeCommand: async () => 'claude --resume abc',
+    dismissPaused: noop,
+    getHookStatuses: async () => [
+      { providerId: 'claude', status: 'installed' as const, detail: '~/.claude/settings.json' },
+      { providerId: 'chatgpt', status: 'conflict' as const, detail: 'Codex allows one notify program and yours is already set.' },
+      { providerId: 'gemini', status: 'not_installed' as const }
+    ],
+    installHooks: async (providerId) => ({ providerId, status: 'installed' as const }),
+    uninstallHooks: async (providerId) => ({ providerId, status: 'not_installed' as const }),
+    getRemoteInfo: async () => ({ enabled: false, addresses: [], port: 47831 }),
+    regenerateRemote: async () => ({ enabled: false, addresses: [], port: 47831 }),
     getUpdateState: async () => ({
       status: quiet ? 'up_to_date' : 'available',
       currentVersion: '0.2.5',

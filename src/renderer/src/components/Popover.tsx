@@ -5,6 +5,7 @@ import { ProviderIcon } from './ProviderIcon'
 import { formatUntil, hasReadings, relativeSyncLabel, usageColor } from '../lib/usageColor'
 import { useAppStore } from '../state/store'
 import { UpdateBanner } from './UpdateBanner'
+import { AgentPanel } from './AgentPanel'
 
 interface PopoverProps {
   provider: ProviderMeta
@@ -140,6 +141,8 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
           <p>Waiting for first sync…</p>
         </div>
       )}
+
+      <AgentPanel provider={provider} />
 
       <UpdateBanner compact />
 

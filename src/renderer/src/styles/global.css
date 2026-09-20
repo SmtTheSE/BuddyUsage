@@ -955,3 +955,244 @@ body[data-route='settings'] #root {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Agent presence: a live session breathes on its ring; attention flags it.
+   --------------------------------------------------------------------------- */
+.cell__presence {
+  position: absolute;
+  top: 2px;
+  right: 10px;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 3px;
+  border-radius: 7px;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+  color: #04122b;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 2px rgba(10, 10, 12, 0.85),
+    0 0 10px var(--accent);
+  animation: presence-breathe 2.2s ease-in-out infinite;
+}
+.cell__presence--attention {
+  background: #f2e53a;
+  box-shadow:
+    0 0 0 2px rgba(10, 10, 12, 0.85),
+    0 0 12px #f2e53a;
+  animation: presence-attention 1.1s ease-in-out infinite;
+}
+.cell--running .ring::after,
+.cell--attention .ring::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0.45;
+  animation: presence-halo 2.2s ease-out infinite;
+  pointer-events: none;
+}
+.cell--attention .ring::after {
+  border-color: #f2e53a;
+}
+.ring {
+  position: relative;
+}
+@keyframes presence-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+@keyframes presence-attention {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.75;
+  }
+}
+@keyframes presence-halo {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+.dot--running {
+  animation: presence-breathe 2.2s ease-in-out infinite;
+}
+.dot--attention {
+  animation: presence-attention 1.1s ease-in-out infinite;
+  outline: 2px solid rgba(242, 229, 58, 0.7);
+  outline-offset: 1px;
+}
+
+/* Sessions block in the card */
+.agents {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.agents__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, #9a9aa3);
+  margin-bottom: 6px;
+}
+.session {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+  padding: 6px 0;
+}
+.session__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: presence-breathe 2.2s ease-in-out infinite;
+}
+.session--attention .session__dot {
+  background: #f2e53a;
+  box-shadow: 0 0 8px #f2e53a;
+  animation: presence-attention 1.1s ease-in-out infinite;
+}
+.session--stopping .session__dot {
+  background: var(--muted, #9a9aa3);
+  box-shadow: none;
+  animation: none;
+}
+.session__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session__meta {
+  font-size: 11px;
+  color: var(--muted, #9a9aa3);
+}
+.session__msg {
+  grid-column: 2 / -1;
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--fg-soft, #d9d9de);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px 8px;
+  max-height: 64px;
+  overflow: hidden;
+}
+.session__actions {
+  display: flex;
+  gap: 4px;
+}
+.button--stop {
+  color: #ffb4a0;
+  background: rgba(255, 77, 28, 0.14);
+}
+.button--stop:hover {
+  background: rgba(255, 77, 28, 0.24);
+}
+.nudge {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.nudge__input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  outline: none;
+}
+.nudge__input:focus {
+  border-color: var(--accent);
+}
+.nudge__reply {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  max-height: 140px;
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.nudge__reply--error {
+  color: #ffb4a0;
+}
+.paused {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(242, 229, 58, 0.1);
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Phone remote card */
+.remote {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 6px;
+}
+.remote__qr {
+  width: 168px;
+  height: 168px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  align-self: center;
+}
+.remote__qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.remote__url {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11.5px;
+}
+.remote__url code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}

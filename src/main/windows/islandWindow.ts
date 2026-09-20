@@ -170,6 +170,19 @@ export function repositionIslandWindow(): void {
  * we toggle click-through accordingly (`forward: true` keeps mousemove
  * flowing so the renderer can flip it back when the cursor re-enters).
  */
+/**
+ * The island never takes focus (so it never steals it from the editor),
+ * except while the user is typing into the nudge box: the renderer asks
+ * for focus on input focus and gives it back on blur.
+ */
+export function setIslandFocusable(focusable: boolean): void {
+  const win = getIslandWindow()
+  if (!win) return
+  win.setFocusable(focusable)
+  if (focusable) win.focus()
+  else win.blur()
+}
+
 export function setIgnoreMouse(ignore: boolean): void {
   // Linux can't forward mouse moves through an ignored window, so hover
   // would never re-enable input there; the window simply stays solid.

@@ -5,10 +5,15 @@ import { getAllSnapshots, getSnapshot, onSnapshotUpdated } from './store/usageSt
 import { getSettings, updateSettings } from './store/settings'
 import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler'
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
-import { getIslandWindow, repositionIslandWindow, setIgnoreMouse } from './windows/islandWindow'
+import { getIslandWindow, repositionIslandWindow, setIgnoreMouse, setIslandFocusable } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
 import { refreshTrayTitle } from './tray'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
+import { applyAgentSettings, currentRemoteInfo, getAgentsState, hookTarget, providerMetas, regenerateRemoteToken } from './agents'
+import { focusSession, nudge, resumeCommandFor, stopSession } from './agents/agentControl'
+import { getSession } from './agents/agentMonitor'
+import { dismissPaused, resumePaused } from './agents/limitGuard'
+import { allHookStatuses, installHooks, uninstallHooks } from './agents/hooks'
 
 /**
  * Everything needed to debug a wrong reading, ready to paste into an issue:
@@ -45,14 +50,31 @@ export function applySettings(patch: Partial<AppSettings>): AppSettings {
     app.setLoginItemSettings({ openAtLogin: next.launchAtLogin })
   }
   refreshTrayTitle()
+  if (patch.remoteEnabled !== undefined || patch.limitGuard !== undefined) void applyAgentSettings()
   broadcast(IpcChannel.SettingsUpdated, next)
   return next
 }
 
 export function registerIpcHandlers(): void {
-  ipcMain.handle(IpcChannel.ProvidersList, () =>
-    providerRegistry.map((p) => ({ id: p.id, name: p.name, color: p.color, usageUrl: p.usageUrl }))
+  ipcMain.handle(IpcChannel.ProvidersList, () => providerMetas())
+
+  // Agent control: everything here acts on local processes and files only.
+  ipcMain.handle(IpcChannel.AgentsGet, () => getAgentsState())
+  ipcMain.handle(IpcChannel.AgentsStop, (_e, id: string, force?: boolean) => stopSession(id, force === true))
+  ipcMain.handle(IpcChannel.AgentsFocus, (_e, id: string) => focusSession(id))
+  ipcMain.handle(IpcChannel.AgentsNudge, (_e, providerId: string, text: string, sessionId?: string) =>
+    nudge(providerId, text, sessionId ? getSession(sessionId) : undefined)
   )
+  ipcMain.handle(IpcChannel.AgentsResume, (_e, providerId?: string) => resumePaused(providerId))
+  ipcMain.handle(IpcChannel.AgentsResumeCommand, (_e, providerId: string, cwd?: string, sessionId?: string) =>
+    resumeCommandFor(providerId, cwd, sessionId)
+  )
+  ipcMain.handle(IpcChannel.AgentsDismissPaused, (_e, providerId?: string) => dismissPaused(providerId))
+  ipcMain.handle(IpcChannel.HooksStatus, () => allHookStatuses())
+  ipcMain.handle(IpcChannel.HooksInstall, (_e, providerId: string) => installHooks(providerId, hookTarget()))
+  ipcMain.handle(IpcChannel.HooksUninstall, (_e, providerId: string) => uninstallHooks(providerId))
+  ipcMain.handle(IpcChannel.RemoteInfo, () => currentRemoteInfo())
+  ipcMain.handle(IpcChannel.RemoteRegenerate, () => regenerateRemoteToken())
 
   ipcMain.handle(IpcChannel.UsageGetAll, () => getAllSnapshots())
 
@@ -89,6 +111,7 @@ export function registerIpcHandlers(): void {
     openSettingsWindow()
   })
 
+  ipcMain.handle(IpcChannel.WindowSetFocusable, (_e, focusable: boolean) => setIslandFocusable(focusable === true))
   ipcMain.handle(IpcChannel.AppQuit, () => app.quit())
 
   ipcMain.handle(IpcChannel.UpdateGetState, () => getUpdateState())

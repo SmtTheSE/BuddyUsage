@@ -1,9 +1,10 @@
 import Store from 'electron-store'
 import type { AppSettings } from '@shared/types'
-import { DEFAULT_REFRESH_INTERVAL_MINUTES } from '@shared/types'
+import { DEFAULT_LIMIT_GUARD_PERCENT, DEFAULT_REFRESH_INTERVAL_MINUTES } from '@shared/types'
+import { randomBytes } from 'crypto'
 import { providerRegistry } from '../providers/registry'
 
-const CURRENT_SCHEMA_VERSION = 3
+const CURRENT_SCHEMA_VERSION = 4
 
 function defaultSettings(): AppSettings {
   return {
@@ -16,7 +17,11 @@ function defaultSettings(): AppSettings {
     menuBarUsage: false,
     onboardingSeen: false,
     launchAtLogin: false,
-    theme: 'auto'
+    theme: 'auto',
+    limitGuard: { enabled: false, percent: DEFAULT_LIMIT_GUARD_PERCENT, providers: {} },
+    agentAlerts: true,
+    remoteEnabled: false,
+    remoteToken: randomBytes(16).toString('hex')
   }
 }
 
@@ -46,7 +51,11 @@ function migrate(stored: Partial<AppSettings> & Record<string, unknown>): AppSet
     // users still on the old default.
     next = { ...next, refreshIntervalMinutes: defaults.refreshIntervalMinutes }
   }
-  return { ...defaults, ...next, schemaVersion: CURRENT_SCHEMA_VERSION }
+  // v3 -> v4 (agent control): new fields simply take their defaults, but
+  // the token must be generated once and then kept, not re-rolled per read.
+  const merged = { ...defaults, ...next, schemaVersion: CURRENT_SCHEMA_VERSION } as AppSettings
+  if (!next.remoteToken) store.set('settings', merged)
+  return merged
 }
 
 export function getSettings(): AppSettings {

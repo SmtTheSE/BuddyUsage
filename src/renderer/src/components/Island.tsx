@@ -64,8 +64,16 @@ export function Island(): JSX.Element {
   const bodyRef = useRef<HTMLDivElement>(null)
   const cellRefs = useRef(new Map<string, HTMLButtonElement>())
   const [bodySize, setBodySize] = useState({ width: 0, height: 0 })
+  const [popoverHeight, setPopoverHeight] = useState(0)
+  const popoverObserver = useRef<ResizeObserver>()
 
   useClickThrough()
+
+  useEffect(() => {
+    const onPin = (event: Event): void => setPinned((event as CustomEvent<string>).detail)
+    window.addEventListener('buddy:pin', onPin)
+    return () => window.removeEventListener('buddy:pin', onPin)
+  }, [])
 
   useLayoutEffect(() => {
     const body = bodyRef.current
@@ -111,8 +119,9 @@ export function Island(): JSX.Element {
   const activeId = expanded ? (pinned ?? hovered) : null
   const active: ProviderMeta | undefined = providers.find((p) => p.id === activeId)
   const activeCell = activeId ? cellRefs.current.get(activeId) : undefined
-  // Centre the card on its ring, but keep it inside the window.
-  const POPOVER_HALF = 130
+  // Centre the card on its ring, but keep it inside the window. The card's
+  // height varies (sessions, nudge reply), so measure it rather than guess.
+  const POPOVER_HALF = Math.max(130, popoverHeight / 2)
   const rawTop = activeCell ? ISLAND_LAYOUT.islandInsetTop + activeCell.offsetTop + activeCell.offsetHeight / 2 : 0
   const popoverTop = Math.min(Math.max(POPOVER_HALF + 8, rawTop), ISLAND_LAYOUT.windowHeight - POPOVER_HALF - 8)
 
@@ -154,6 +163,9 @@ export function Island(): JSX.Element {
                 const metric = primaryMetric(snapshot)
                 const color = hasReadings(snapshot) ? usageColor(metric?.percentUsed) : USAGE_COLORS.idle
                 const syncing = state.syncing[provider.id] === true
+                const sessions = state.agents.sessions.filter((a) => a.providerId === provider.id)
+                const sessionCount = sessions.length
+                const presence = sessions.some((a) => a.state === 'attention') ? 'attention' : sessionCount > 0 ? 'running' : null
                 return (
                   <motion.button
                     key={provider.id}
@@ -165,7 +177,8 @@ export function Island(): JSX.Element {
                       'cell',
                       activeId === provider.id ? 'cell--active' : '',
                       pinned === provider.id ? 'cell--pinned' : '',
-                      syncing ? 'cell--syncing' : ''
+                      syncing ? 'cell--syncing' : '',
+                      presence === 'attention' ? 'cell--attention' : presence === 'running' ? 'cell--running' : ''
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -191,6 +204,19 @@ export function Island(): JSX.Element {
                     >
                       <ProviderIcon providerId={provider.id} name={provider.name} size={28} />
                     </Ring>
+                    {presence && (
+                      <span
+                        className={`cell__presence cell__presence--${presence}`}
+                        title={
+                          presence === 'attention'
+                            ? `${provider.name} needs you`
+                            : `${sessionCount} ${provider.name} session${sessionCount === 1 ? '' : 's'} running`
+                        }
+                        aria-label={presence === 'attention' ? 'Needs attention' : 'Running'}
+                      >
+                        {sessionCount > 1 ? sessionCount : ''}
+                      </span>
+                    )}
                     {(() => {
                       const label = ringLabel(snapshot)
                       return (
@@ -218,7 +244,9 @@ export function Island(): JSX.Element {
                 const color = hasReadings(snapshot)
                   ? usageColor(primaryMetric(snapshot)?.percentUsed)
                   : USAGE_COLORS.idle
-                return <span key={provider.id} className="dot" style={{ background: color }} title={provider.name} />
+                const live = state.agents.sessions.filter((a) => a.providerId === provider.id)
+                const dotClass = live.some((a) => a.state === 'attention') ? 'dot dot--attention' : live.length ? 'dot dot--running' : 'dot'
+                return <span key={provider.id} className={dotClass} style={{ background: color }} title={provider.name} />
               })}
             </motion.div>
           )}
@@ -255,7 +283,17 @@ export function Island(): JSX.Element {
 
       <AnimatePresence>
         {active && (
-          <div key={active.id} className="popover-anchor" style={{ top: popoverTop }}>
+          <div
+            key={active.id}
+            className="popover-anchor"
+            style={{ top: popoverTop }}
+            ref={(el) => {
+              popoverObserver.current?.disconnect()
+              if (!el) return
+              popoverObserver.current = new ResizeObserver(([entry]) => setPopoverHeight(entry.contentRect.height))
+              popoverObserver.current.observe(el)
+            }}
+          >
             <Popover
               provider={active}
               snapshot={state.usageByProvider[active.id]}

@@ -9,7 +9,11 @@ Effort: **S** = a day or less, **M** = a few days, **L** = a week or more.
 
 ---
 
-## 1. Agent control (local, precise, no cloud)
+## 1. Agent control (local, precise, no cloud) — **shipped in 0.4.0**
+
+1.1–1.6 below are implemented; see the README's *Agent control* section
+for what each does today. The "anywhere" tier of 1.6 is covered by
+Tailscale/VPN rather than a relay.
 
 ### 1.1 Live agent presence — S
 Show which assistants are *running right now*: a pulsing ring, "2 sessions

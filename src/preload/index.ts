@@ -1,6 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannel } from '@shared/types'
-import type { AppSettings, ProviderMeta, SyncState, UpdateState, UsageSnapshot } from '@shared/types'
+import type {
+  AgentsState,
+  AppSettings,
+  HookStatus,
+  NudgeResult,
+  ProviderMeta,
+  RemoteInfo,
+  SyncState,
+  UpdateState,
+  UsageSnapshot
+} from '@shared/types'
 
 function subscribe<T>(channel: string, callback: (payload: T) => void): () => void {
   const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
@@ -31,6 +41,7 @@ const api = {
   showContextMenu: (providerId?: string): Promise<void> =>
     ipcRenderer.invoke(IpcChannel.WindowShowContextMenu, providerId),
   openSettings: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowOpenSettings),
+  setFocusable: (focusable: boolean): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowSetFocusable, focusable),
   quit: (): Promise<void> => ipcRenderer.invoke(IpcChannel.AppQuit),
   getUpdateState: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannel.UpdateGetState),
   checkForUpdates: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannel.UpdateCheck),
@@ -43,7 +54,24 @@ const api = {
   onSettingsUpdated: (callback: (settings: AppSettings) => void): (() => void) =>
     subscribe(IpcChannel.SettingsUpdated, callback),
   onSyncStateChanged: (callback: (state: SyncState) => void): (() => void) =>
-    subscribe(IpcChannel.UsageSyncState, callback)
+    subscribe(IpcChannel.UsageSyncState, callback),
+
+  // Agent control
+  getAgents: (): Promise<AgentsState> => ipcRenderer.invoke(IpcChannel.AgentsGet),
+  onAgentsUpdated: (callback: (state: AgentsState) => void): (() => void) => subscribe(IpcChannel.AgentsUpdated, callback),
+  stopAgent: (id: string, force?: boolean): Promise<boolean> => ipcRenderer.invoke(IpcChannel.AgentsStop, id, force),
+  focusAgent: (id: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.AgentsFocus, id),
+  nudgeAgent: (providerId: string, text: string, sessionId?: string): Promise<NudgeResult> =>
+    ipcRenderer.invoke(IpcChannel.AgentsNudge, providerId, text, sessionId),
+  resumePaused: (providerId?: string): Promise<number> => ipcRenderer.invoke(IpcChannel.AgentsResume, providerId),
+  resumeCommand: (providerId: string, cwd?: string, sessionId?: string): Promise<string> =>
+    ipcRenderer.invoke(IpcChannel.AgentsResumeCommand, providerId, cwd, sessionId),
+  dismissPaused: (providerId?: string): Promise<void> => ipcRenderer.invoke(IpcChannel.AgentsDismissPaused, providerId),
+  getHookStatuses: (): Promise<HookStatus[]> => ipcRenderer.invoke(IpcChannel.HooksStatus),
+  installHooks: (providerId: string): Promise<HookStatus> => ipcRenderer.invoke(IpcChannel.HooksInstall, providerId),
+  uninstallHooks: (providerId: string): Promise<HookStatus> => ipcRenderer.invoke(IpcChannel.HooksUninstall, providerId),
+  getRemoteInfo: (): Promise<RemoteInfo> => ipcRenderer.invoke(IpcChannel.RemoteInfo),
+  regenerateRemote: (): Promise<RemoteInfo> => ipcRenderer.invoke(IpcChannel.RemoteRegenerate)
 }
 
 export type BuddyUsageApi = typeof api

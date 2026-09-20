@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AppSettings, ProviderMeta, UpdateState, UsageSnapshot } from '@shared/types'
+import type { AgentSession, AgentsState, AppSettings, ProviderMeta, UpdateState, UsageSnapshot } from '@shared/types'
 
 interface AppState {
   providers: ProviderMeta[]
@@ -7,6 +7,7 @@ interface AppState {
   settings: AppSettings | null
   syncing: Record<string, boolean>
   update: UpdateState | null
+  agents: AgentsState
   init: () => Promise<void>
   refresh: (providerId?: string) => Promise<void>
   openLogin: (providerId: string) => Promise<void>
@@ -20,22 +21,26 @@ export const useAppStore = create<AppState>((set) => ({
   settings: null,
   syncing: {},
   update: null,
+  agents: { sessions: [], paused: [], scanAvailable: true },
 
   init: async () => {
-    const [providers, snapshots, settings, syncing, update] = await Promise.all([
+    const [providers, snapshots, settings, syncing, update, agents] = await Promise.all([
       window.buddyUsage.listProviders(),
       window.buddyUsage.getAllUsage(),
       window.buddyUsage.getSettings(),
       window.buddyUsage.getSyncState(),
-      window.buddyUsage.getUpdateState()
+      window.buddyUsage.getUpdateState(),
+      window.buddyUsage.getAgents()
     ])
     set({
       providers,
       settings,
       syncing,
       update,
+      agents,
       usageByProvider: Object.fromEntries(snapshots.map((s) => [s.providerId, s]))
     })
+    window.buddyUsage.onAgentsUpdated((agents) => set({ agents }))
     window.buddyUsage.onUsageUpdated((snapshot) => {
       set((state) => ({
         usageByProvider: { ...state.usageByProvider, [snapshot.providerId]: snapshot }
@@ -65,6 +70,13 @@ export const useAppStore = create<AppState>((set) => ({
     set({ settings: next })
   }
 }))
+
+/** Live sessions for one provider, attention first. */
+export function selectSessions(agents: AgentsState, providerId: string): AgentSession[] {
+  return agents.sessions
+    .filter((s) => s.providerId === providerId)
+    .sort((a, b) => Number(b.state === 'attention') - Number(a.state === 'attention'))
+}
 
 export function selectEnabledProviders(state: AppState): ProviderMeta[] {
   if (!state.settings) return state.providers

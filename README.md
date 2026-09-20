@@ -4,7 +4,10 @@
 
 A small island, docked to the edge of your screen, that shows how much
 of your **Claude**, **ChatGPT / Codex**, **Gemini**, **Cursor** and **GitHub Copilot** plan you've used —
-without alt-tabbing into each provider's website.
+without alt-tabbing into each provider's website. It also watches the
+**claude**, **codex** and **gemini** sessions running on your machine: see
+which project each one is in, stop one, nudge it, get told when one needs
+you, guard your limits, and do all of that from your phone.
 
 One ring per assistant, coloured by how close you are to the limit. Hover a
 ring for the detailed breakdown (session limit, weekly limit, when each
@@ -109,6 +112,27 @@ honest states rather than errors:
 | **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
 | **Cursor** (cursor.com → Dashboard → Usage) · off by default | Included usage per model pool in dollars, monthly reset | Hobby plan shows included usage once used |
 | **GitHub Copilot** (github.com → Settings → Billing → Metered usage) · off by default | AI Credits used of included (legacy plans: premium requests), monthly reset | Copilot Free shows metered usage once there is any |
+
+## Agent control
+
+Everything here is local: processes and files on your own machine, no
+cloud, nothing leaves the computer.
+
+| Feature | What it does |
+| --- | --- |
+| **Live presence** | Each ring shows a breathing dot while a `claude` / `codex` / `gemini` session is running (a count when there are several). The card lists every session with its project and how long it has run. |
+| **Stop** | Interrupts a session the way Ctrl-C would (`SIGINT`), so the CLI saves the conversation and exits; it can be resumed later with `claude --resume`, `codex resume`, `gemini --resume`. Escalates to a hard kill if it does not go. On Windows both are a hard stop (the OS has no cross-process Ctrl-C); the conversation is still on disk. |
+| **Jump** | Brings the terminal app hosting that session to the front. |
+| **Nudge** | A one-line message to the latest conversation of that provider, sent headlessly (`claude -p --resume <id>`, `codex exec resume <id>`, `gemini --resume latest -p`) in the session's own project directory; the reply shows inline and lands in the agent's transcript too. Best used when the session is idle or waiting. |
+| **Waiting-for-you alerts** | Settings → install a hook per CLI. Claude Code (`~/.claude/settings.json`: Notification, Stop, UserPromptSubmit), Gemini CLI (`~/.gemini/settings.json`: Notification, AfterAgent, BeforeAgent) and Codex (`notify` in `~/.codex/config.toml`) then call BuddyUsage the moment a session needs a permission click, goes idle or finishes. The ring flags it; permission/idle also raise a system notification whose click jumps to the terminal. Remove restores the file exactly. |
+| **Limit guard** | "Pause my agents when Claude passes 90%." When a provider's main limit crosses the line, its running sessions are stopped and remembered; a notification and the card offer **Resume** after the reset, which reopens each one in a fresh terminal. New sessions started while over the line are stopped as well. Off by default. |
+| **Phone remote** | Settings → Phone remote shows a QR code. The page (served by the app on your Wi‑Fi, secret in the URL, nothing to install) shows the rings, the running sessions with Stop, and the nudge box. Works from anywhere over Tailscale or any VPN into the machine. |
+| **Copy diagnostics** | Right-click a ring: the parsed reading and its source, for bug reports. |
+
+The hook listener always runs on `127.0.0.1:47831` (next free port if taken;
+installed hooks are re-pointed automatically). It binds to the network only
+while Phone remote is on. Every URL carries the secret; without it the
+server answers 404. **New secret** in Settings revokes old links.
 
 ## Never a guessed number
 
