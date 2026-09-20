@@ -73,11 +73,18 @@ export function AgentPanel({ provider }: AgentPanelProps): JSX.Element | null {
   }
 
   const showNudge = sessions.length > 0 || paused.length > 0 || reply !== null
+  // Nothing running, nothing paused: stay out of the way. The block is about
+  // local CLI agents (claude / codex / gemini commands), not browser chats.
+  if (!showNudge) return null
+
+  const cli = provider.id === 'chatgpt' ? 'codex' : provider.id
 
   return (
     <div className="agents" data-solid>
       <div className="agents__title">
-        <span>{sessions.length ? `${sessions.length} session${sessions.length === 1 ? '' : 's'}` : 'No session running'}</span>
+        <span>
+          {cli} CLI · {sessions.length ? `${sessions.length} session${sessions.length === 1 ? '' : 's'} on this computer` : 'nothing running'}
+        </span>
       </div>
 
       {sessions.map((s) => (
