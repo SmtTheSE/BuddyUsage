@@ -193,6 +193,14 @@ provider, reads that page on a schedule, and renders the numbers.
   `window.buddyUsage` bridge (`src/preload/index.ts`); the renderer never
   touches Node or Electron.
 
+## Roadmap
+
+Where this is going — agent control (live presence, a Stop button, an
+auto-stop limit guard, "waiting for you" badges, a nudge box, a phone
+kill switch), budgeting (burn rate, daily pace, per-project usage) and
+more sources — with effort and precision notes for each:
+[docs/ROADMAP.md](docs/ROADMAP.md).
+
 ## Develop
 
 ```bash
