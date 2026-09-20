@@ -7,9 +7,16 @@ import { parseUsageText, type MetricSpec } from './parseHeuristics'
  * Codex one (rolling 5-hour and weekly windows, drawn from the same plan),
  * so that is what this provider reads.
  */
+// The page words each window as "5 hour usage limit" / "Weekly usage limit"
+// and counts *down* ("84% left"); shorter variants cover older copy. The
+// bare "Weekly" fallback is last so "Full reset (Weekly + 5 hr)" can't win.
 const metrics: MetricSpec[] = [
-  { id: 'session', labels: ['5-hour limit', '5 hour limit', 'Current session'], displayLabel: '5-hour limit' },
-  { id: 'weekly', labels: ['Weekly limit', 'Weekly'], displayLabel: 'Weekly limit' }
+  {
+    id: 'session',
+    labels: ['5-hour usage limit', '5-hour limit', 'Current session'],
+    displayLabel: '5-hour limit'
+  },
+  { id: 'weekly', labels: ['Weekly usage limit', 'Weekly limit', 'Weekly'], displayLabel: 'Weekly limit' }
 ]
 
 export const chatgptProvider: ProviderDefinition = {

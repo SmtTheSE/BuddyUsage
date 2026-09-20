@@ -41,15 +41,22 @@ const KNOWN_PLANS: { label: string; pattern: RegExp }[] = [
 /** Matches "12 of 50 messages", "12/50 requests", "12 out of 50", "$3.20 of $15.00". */
 const FRACTION_PATTERN = /([$€£]?)([\d,.]+)\s*(?:\/|of|out of)\s*([$€£]?)([\d,.]+)\s*([a-zA-Z%]+)?/i
 
-/** Matches a standalone percentage. */
-const PERCENT_PATTERN = /(\d{1,3}(?:\.\d+)?)\s?%/
+/**
+ * Matches a standalone percentage plus the word that says which way it
+ * counts. Claude/Gemini say "73% used"; the Codex page says "84% left" —
+ * the same number means the opposite thing, so the qualifier matters.
+ */
+const PERCENT_PATTERN = /(\d{1,3}(?:\.\d+)?)\s?%\s*(left|remaining|available|used|consumed)?/i
 
 /**
- * Matches "Resets on March 3", "resets in 4 hours", "renews Thu 12:00 AM".
- * Captures the phrase after the verb verbatim (preposition included) so the
- * UI can render "Resets in 51 min" exactly as the provider words it.
+ * Matches "Resets on March 3", "resets in 4 hours", "renews Thu 12:00 AM",
+ * "Resets 10:18 PM". Captures the phrase after the verb verbatim
+ * (preposition included) so the UI can render "Resets in 51 min" exactly as
+ * the provider words it. The phrase must start like a time so a "Resets"
+ * heading followed by unrelated copy ("Use a reset to restore…") is skipped.
  */
-const RESET_PATTERN = /\b(?:resets?|renews?)\s+([^.\n]{2,40})/i
+const RESET_PATTERN =
+  /\b(?:resets?|renews?)\s+((?:\d|(?:in|on|at|every|tomorrow|today|tonight|midnight|noon|mon|tue|wed|thu|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b)[^.\n]{0,40})/i
 
 /** How much page text after a label is considered "its" section. */
 const METRIC_WINDOW_CHARS = 160
@@ -60,6 +67,12 @@ function toNumber(raw: string): number {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** "5-hour limit" and "5 hour limit" are the same label; let hyphens and spaces match each other. */
+function labelPattern(label: string): RegExp {
+  const flexible = escapeRegExp(label).replace(/[\s-]+/g, '[\\s-]+')
+  return new RegExp(`\\b${flexible}\\b`, 'i')
 }
 
 export function findPlanLabel(text: string): string | undefined {
@@ -95,11 +108,16 @@ export function findFraction(
   }
 }
 
+/** Returns the percentage *used*, inverting "N% left" / "N% remaining" phrasing. */
 export function findPercent(text: string): number | undefined {
   const match = PERCENT_PATTERN.exec(text)
   if (!match) return undefined
   const value = Number(match[1])
-  return Number.isFinite(value) ? Math.round(value) : undefined
+  if (!Number.isFinite(value)) return undefined
+  const qualifier = match[2]?.toLowerCase()
+  const remaining = qualifier === 'left' || qualifier === 'remaining' || qualifier === 'available'
+  const used = remaining ? 100 - value : value
+  return Math.round(Math.min(100, Math.max(0, used)))
 }
 
 export function findResetPhrase(text: string): string | undefined {
@@ -134,7 +152,7 @@ export function extractMetrics(text: string, specs: MetricSpec[]): UsageMetric[]
   const found: { spec: MetricSpec; start: number; end: number }[] = []
   for (const spec of specs) {
     for (const label of spec.labels) {
-      const match = new RegExp(`\\b${escapeRegExp(label)}\\b`, 'i').exec(normalized)
+      const match = labelPattern(label).exec(normalized)
       if (match) {
         found.push({ spec, start: match.index, end: match.index + match[0].length })
         break

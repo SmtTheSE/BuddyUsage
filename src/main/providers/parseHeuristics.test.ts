@@ -10,6 +10,7 @@ import {
   parseUsageText,
   type MetricSpec
 } from './parseHeuristics'
+import { chatgptProvider } from './chatgpt'
 
 const CLAUDE_SPECS: MetricSpec[] = [
   { id: 'session', labels: ['Current session'], displayLabel: 'Current session' },
@@ -73,6 +74,17 @@ describe('findPercent', () => {
     expect(findPercent("You've used 73% of your weekly limit")).toBe(73)
   })
 
+  it('inverts "left" / "remaining" phrasing into percent used', () => {
+    expect(findPercent('100% left')).toBe(0)
+    expect(findPercent('84% left\nResets Sep 2')).toBe(16)
+    expect(findPercent('12.4% remaining')).toBe(88)
+    expect(findPercent('40 % available')).toBe(60)
+  })
+
+  it('keeps "used" phrasing as-is', () => {
+    expect(findPercent('27% used')).toBe(27)
+  })
+
   it('returns undefined with no percentage present', () => {
     expect(findPercent('nothing to see here')).toBeUndefined()
   })
@@ -124,6 +136,16 @@ describe('findResetPhrase', () => {
 
   it('captures a "renews in" phrase', () => {
     expect(findResetPhrase('Plan renews in 4 days')).toBe('in 4 days')
+  })
+
+  it('captures a bare clock time or date ("Resets 10:18 PM", "Resets Sep 2")', () => {
+    expect(findResetPhrase('100% left\nResets 10:18 PM')).toBe('10:18 PM')
+    expect(findResetPhrase('84% left\nResets Sep 2')).toBe('Sep 2')
+  })
+
+  it('skips a "Resets" heading followed by unrelated copy', () => {
+    expect(findResetPhrase('Resets\nUse a reset to restore your 5-hour limit')).toBeUndefined()
+    expect(findResetPhrase('Resets\nUse a reset to restore your 5-hour limit\nResets in 2 hr')).toBe('in 2 hr')
   })
 })
 
@@ -221,6 +243,50 @@ Resets Sep 22 at 11:07 PM
   it('does not misread the account name or intro copy as usage', () => {
     const result = parseUsageText(GEMINI_PANEL.replace('37% used', '0% used'), GEMINI_SPECS)
     expect(result?.metrics[0].percentUsed).toBe(0)
+  })
+})
+
+describe('ChatGPT Codex usage page', () => {
+  // Wording of chatgpt.com/codex/settings/usage. The page counts *down*
+  // ("% left") and has a "Resets" section heading whose body is unrelated
+  // copy — a fresh account must read as 0% used, not 100%.
+  const specs = chatgptProvider.metrics
+  const page = [
+    'Usage',
+    '7D 1M Custom',
+    'Group by: Day',
+    'Plus',
+    'Resets',
+    'Use a reset to restore your 5-hour limit',
+    '1 reset available',
+    'Full reset (Weekly + 5 hr)',
+    'Use reset',
+    '5 hour usage limit',
+    '100% left',
+    'Resets 10:18 PM',
+    'Weekly usage limit',
+    '84% left',
+    'Resets Sep 2',
+    'Add credits',
+    'Upgrade plan'
+  ].join('\n')
+
+  it('reads a fresh account as 0% used with both windows and their resets', () => {
+    const parsed = chatgptProvider.parse(page)
+    expect(parsed?.planLabel).toBe('Plus')
+    expect(parsed?.metrics).toEqual([
+      expect.objectContaining({ id: 'session', label: '5-hour limit', percentUsed: 0, resetLabel: '10:18 PM' }),
+      expect.objectContaining({ id: 'weekly', label: 'Weekly limit', percentUsed: 16, resetLabel: 'Sep 2' })
+    ])
+  })
+
+  it('matches hyphenated and spaced label spellings alike', () => {
+    expect(extractMetrics('5-hour usage limit\n30% left', specs)[0]?.percentUsed).toBe(70)
+    expect(extractMetrics('5 hour limit\n30% used', specs)[0]?.percentUsed).toBe(30)
+  })
+
+  it('reads a fully consumed window as 100% used', () => {
+    expect(extractMetrics('5 hour usage limit\n0% left\nResets 10:18 PM', specs)[0]?.percentUsed).toBe(100)
   })
 })
 
