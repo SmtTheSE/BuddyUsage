@@ -13,6 +13,8 @@ import type { UsageMetric } from '@shared/types'
 export interface ParsedUsage {
   planLabel?: string
   metrics: UsageMetric[]
+  /** Set by structured (API-backed) readers: the metrics are the full set, so no further re-reads are needed. */
+  complete?: boolean
 }
 
 /** A named limit window a provider's page is expected to show. */

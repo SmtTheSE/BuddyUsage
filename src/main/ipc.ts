@@ -1,7 +1,7 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, Menu, shell } from 'electron'
 import { IpcChannel, type AppSettings } from '@shared/types'
 import { providerRegistry, getProvider } from './providers/registry'
-import { getAllSnapshots, onSnapshotUpdated } from './store/usageStore'
+import { getAllSnapshots, getSnapshot, onSnapshotUpdated } from './store/usageStore'
 import { getSettings, updateSettings } from './store/settings'
 import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler'
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
@@ -9,6 +9,27 @@ import { getIslandWindow, repositionIslandWindow, setIgnoreMouse } from './windo
 import { openSettingsWindow } from './windows/settingsWindow'
 import { refreshTrayTitle } from './tray'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
+
+/**
+ * Everything needed to debug a wrong reading, ready to paste into an issue:
+ * what the app parsed and the text/JSON it parsed it from. Lets a
+ * non-technical user report a bad number without touching a terminal.
+ */
+function diagnosticsFor(providerId: string): string {
+  const snapshot = getSnapshot(providerId)
+  const { raw, ...parsed } = snapshot ?? { raw: undefined }
+  return [
+    `BuddyUsage ${app.getVersion()} · ${process.platform} ${process.arch}`,
+    `Provider: ${providerId}`,
+    `Captured: ${new Date().toISOString()}`,
+    '',
+    '--- parsed ---',
+    JSON.stringify(parsed, null, 2),
+    '',
+    '--- page ---',
+    raw ?? '(nothing captured yet)'
+  ].join('\n')
+}
 
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -86,6 +107,7 @@ export function registerIpcHandlers(): void {
         { label: `Refresh ${provider.name}`, click: () => void refreshProviderNow(provider.id) },
         { label: `Sign in to ${provider.name}…`, click: () => void requestProviderLogin(provider) },
         { label: `Open ${provider.name} dashboard`, click: () => void shell.openExternal(provider.usageUrl) },
+        { label: 'Copy diagnostics', click: () => clipboard.writeText(diagnosticsFor(provider.id)) },
         { type: 'separator' }
       )
     }

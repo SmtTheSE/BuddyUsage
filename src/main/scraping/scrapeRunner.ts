@@ -45,12 +45,14 @@ async function navigateAndSettle(win: BrowserWindow, url: string): Promise<void>
  */
 function isTrustworthy(provider: ProviderDefinition, parsed: ParsedUsage | undefined): parsed is ParsedUsage {
   if (!parsed || parsed.metrics.length === 0) return false
+  if (parsed.complete) return true
   const primaryId = provider.metrics[0]?.id
   if (!primaryId) return parsed.metrics[0].id !== 'usage'
   return parsed.metrics.some((m) => m.id === primaryId)
 }
 
 function isComplete(provider: ProviderDefinition, parsed: ParsedUsage): boolean {
+  if (parsed.complete) return true
   const ids = new Set(parsed.metrics.map((m) => m.id))
   return provider.metrics.every((spec) => ids.has(spec.id))
 }
@@ -81,6 +83,10 @@ async function readUntilStable(
     raw = await provider.extractRaw(win.webContents)
     const parsed = provider.parse(raw)
     const trusted = isTrustworthy(provider, parsed) ? parsed : undefined
+
+    // A structured (API) reading is exact on the first try; there is no
+    // hydration to wait out.
+    if (trusted?.complete) return { raw, parsed: trusted }
 
     if (trusted && sameReading(trusted, last)) {
       stable = { raw, parsed: trusted }
@@ -118,9 +124,10 @@ async function performScrape(
     const now = new Date()
     const metrics = parsed.metrics.map((m) => ({
       ...m,
-      resetsAt: parseResetLabel(m.resetLabel, now)?.toISOString()
+      resetsAt: m.resetsAt ?? parseResetLabel(m.resetLabel, now)?.toISOString()
     }))
-    return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...parsed, metrics }
+    const { complete: _complete, ...fields } = parsed
+    return { providerId: provider.id, status: 'ok', raw: raw.slice(0, 800), lastSyncedAt: nowIso, ...fields, metrics }
   }
 
   // The URL-based isLoggedIn check above can miss providers that never
