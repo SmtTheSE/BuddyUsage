@@ -3,10 +3,22 @@ import type { ProviderDefinition } from '../providers/types'
 import type { UsageSnapshot } from '@shared/types'
 import { getProviderWindow } from './windowPool'
 import { getSnapshot, setSnapshot } from '../store/usageStore'
-import { findPlanLabel, findResetPhrase, looksFreeTier, looksSignedOut } from '../providers/parseHeuristics'
+import {
+  findPlanLabel,
+  findResetPhrase,
+  looksFreeTier,
+  looksSignedOut,
+  type ParsedUsage
+} from '../providers/parseHeuristics'
 import { parseResetLabel } from './resetTime'
 
 const PAGE_SETTLE_MS = 2000 // lets client-rendered SPA content paint before we read the DOM
+// Usage pages are SPAs that paint their labels before their numbers. A
+// single read can land mid-hydration and see "5 hour usage limit" with no
+// figure yet, so we keep re-reading until every expected window has a
+// value and two consecutive reads agree — then the numbers are real.
+const READ_POLL_MS = 750
+const READ_TIMEOUT_MS = 15_000
 const LOGIN_POLL_MS = 1500
 const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 // A provider's page can hang indefinitely (slow bot-challenge, dropped
@@ -22,6 +34,63 @@ function wait(ms: number): Promise<void> {
 async function navigateAndSettle(win: BrowserWindow, url: string): Promise<void> {
   await win.webContents.loadURL(url).catch(() => undefined)
   await wait(PAGE_SETTLE_MS)
+}
+
+/**
+ * Only a labelled meter counts as a reading. The generic fallback (a bare
+ * number somewhere on the page) is fine for the CLI's best-effort output,
+ * but on the gauge a wrong number is worse than a "stale" badge — so the
+ * app requires the provider's declared windows, and the primary one in
+ * particular.
+ */
+function isTrustworthy(provider: ProviderDefinition, parsed: ParsedUsage | undefined): parsed is ParsedUsage {
+  if (!parsed || parsed.metrics.length === 0) return false
+  const primaryId = provider.metrics[0]?.id
+  if (!primaryId) return parsed.metrics[0].id !== 'usage'
+  return parsed.metrics.some((m) => m.id === primaryId)
+}
+
+function isComplete(provider: ProviderDefinition, parsed: ParsedUsage): boolean {
+  const ids = new Set(parsed.metrics.map((m) => m.id))
+  return provider.metrics.every((spec) => ids.has(spec.id))
+}
+
+function sameReading(a: ParsedUsage | undefined, b: ParsedUsage | undefined): boolean {
+  if (!a || !b) return false
+  return JSON.stringify(a.metrics) === JSON.stringify(b.metrics)
+}
+
+/**
+ * Re-reads the page until it is fully rendered: every declared window has a
+ * figure and two consecutive reads agree. If the page never completes
+ * (a plan that hides one window, say), a stable reading that includes the
+ * primary window is accepted at the deadline; anything less is reported as
+ * unreadable so the previous good numbers stay on screen instead of a
+ * guess.
+ */
+async function readUntilStable(
+  provider: ProviderDefinition,
+  win: BrowserWindow
+): Promise<{ raw: string; parsed: ParsedUsage | undefined }> {
+  const deadline = Date.now() + READ_TIMEOUT_MS
+  let raw = ''
+  let last: ParsedUsage | undefined
+  let stable: { raw: string; parsed: ParsedUsage } | undefined
+
+  for (;;) {
+    raw = await provider.extractRaw(win.webContents)
+    const parsed = provider.parse(raw)
+    const trusted = isTrustworthy(provider, parsed) ? parsed : undefined
+
+    if (trusted && sameReading(trusted, last)) {
+      stable = { raw, parsed: trusted }
+      if (isComplete(provider, trusted)) return stable
+    }
+    last = trusted
+
+    if (Date.now() >= deadline) return stable ?? { raw, parsed: undefined }
+    await wait(READ_POLL_MS)
+  }
 }
 
 /** A failed refresh keeps the last good reading visible instead of blanking the gauge. */
@@ -43,13 +112,9 @@ async function performScrape(
     return { providerId: provider.id, status: 'logged_out', message: 'Sign in required', metrics: [], lastSyncedAt: nowIso }
   }
 
-  const raw = await provider.extractRaw(win.webContents)
-  const parsed = provider.parse(raw)
+  const { raw, parsed } = await readUntilStable(provider, win)
 
-  // A labelled meter is trustworthy; a bare percentage on a page that is
-  // pitching an upgrade is more likely promo copy ("save 20%") than usage.
-  const trustworthy = parsed && (parsed.metrics[0]?.id !== 'usage' || !looksFreeTier(raw))
-  if (parsed && trustworthy) {
+  if (parsed) {
     const now = new Date()
     const metrics = parsed.metrics.map((m) => ({
       ...m,

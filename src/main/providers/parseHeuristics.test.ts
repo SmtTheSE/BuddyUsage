@@ -298,12 +298,17 @@ describe('parseUsageText (full pipeline)', () => {
     expect(result?.metrics[0]).toMatchObject({ percentUsed: 73 })
   })
 
-  it('falls back to a single generic metric when no labels match', () => {
-    const result = parseUsageText('Pro plan: 88% of usage limit used. Resets in 2 hours.', CLAUDE_SPECS)
+  it('falls back to a single generic metric when no labels match but the figure is qualified', () => {
+    const result = parseUsageText('Pro plan: 88% used. Resets in 2 hours.', CLAUDE_SPECS)
     expect(result).toMatchObject({ planLabel: 'Pro' })
     expect(result?.metrics).toEqual([
       expect.objectContaining({ id: 'usage', percentUsed: 88, resetLabel: 'in 2 hours' })
     ])
+  })
+
+  it('refuses a bare, unlabeled percentage (chart axis, discount) as usage', () => {
+    expect(parseUsageText('7D 1M Custom\nGroup by: Day\n50%\n25%\n0%', CLAUDE_SPECS)).toBeUndefined()
+    expect(parseUsageText('Save 20% on annual billing')).toBeUndefined()
   })
 
   it('prefers a fraction over a bare percentage in the fallback', () => {

@@ -120,6 +120,13 @@ export function findPercent(text: string): number | undefined {
   return Math.round(Math.min(100, Math.max(0, used)))
 }
 
+/** Like `findPercent`, but only accepts a percentage that says what it measures ("73% used", "84% left"). */
+export function findQualifiedPercent(text: string): number | undefined {
+  const match = PERCENT_PATTERN.exec(text)
+  if (!match?.[2]) return undefined
+  return findPercent(match[0])
+}
+
 export function findResetPhrase(text: string): string | undefined {
   const match = RESET_PATTERN.exec(text)
   return match?.[1]?.trim()
@@ -201,8 +208,11 @@ export function parseUsageText(text: string, specs: MetricSpec[] = []): ParsedUs
   const metrics = extractMetrics(text, specs)
   if (metrics.length > 0) return { planLabel, metrics }
 
+  // Without a label, only a qualified figure ("73% used", "84% left",
+  // "12 of 50 messages") is plausibly usage — a bare "50%" could be a chart
+  // axis or a discount.
   const fraction = findFraction(normalized)
-  const percent = fraction?.percentUsed ?? findPercent(normalized)
+  const percent = fraction?.percentUsed ?? findQualifiedPercent(normalized)
   if (percent === undefined) return undefined
 
   return {
