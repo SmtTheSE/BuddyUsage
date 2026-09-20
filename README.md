@@ -88,9 +88,11 @@ buddyusage open       # launch the app
 
 ## First run
 
-Click a ring → **Sign in** (or use the menu-bar icon → Sign in). A real
-browser window opens on that provider's own login page. Sessions are kept
-in an isolated, persistent partition per provider, so you do this once.
+Click a ring → **Sign in** (or use the menu-bar / system-tray icon → Sign
+in). A real browser window opens on that provider's own login page.
+Sessions are kept in an isolated, persistent partition per provider, so you
+do this once. On Windows the icon may sit behind the `^` overflow arrow next
+to the clock; drag it onto the taskbar to keep it visible.
 
 Drag the island anywhere — it snaps to the nearest screen edge and remembers
 the spot. Hover it for the `›` handle to collapse it into a slim tab.
@@ -103,10 +105,31 @@ honest states rather than errors:
 | Provider | Paid plans | Free plan |
 | --- | --- | --- |
 | **Claude** (claude.ai → Settings → Usage) | Current session + weekly limits with reset times | Anthropic publishes no percentages; the ring shows **Free** and the card explains — the app tells you when you hit the limit |
-| **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
+| **ChatGPT** (chatgpt.com → Codex → Usage) | Codex 5-hour + weekly limits, read from OpenAI's own usage endpoint — the exact `used_percent` and reset timestamps the Codex CLI's `/status` shows (ChatGPT chat itself has no meter on any plan) | Same note; Codex limits appear on plans that include Codex |
 | **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets | **Real gauges** — Google shows the panel for every plan |
 | **Cursor** (cursor.com → Dashboard → Usage) · off by default | Included usage per model pool in dollars, monthly reset | Hobby plan shows included usage once used |
 | **GitHub Copilot** (github.com → Settings → Billing → Metered usage) · off by default | AI Credits used of included (legacy plans: premium requests), monthly reset | Copilot Free shows metered usage once there is any |
+
+## Never a guessed number
+
+A wrong percentage is worse than no percentage, so the app is strict about
+what reaches the ring:
+
+- **ChatGPT** is read from the JSON endpoint behind the Codex usage page
+  (`/backend-api/wham/usage`, the same call the Codex CLI makes), so the
+  value is OpenAI's own `used_percent`, not a number scraped from text.
+- **Every other provider** is re-read until the page is fully rendered:
+  every expected limit window has a figure and two consecutive reads
+  agree. A half-loaded page is never accepted.
+- Only a **labelled** meter counts ("Current session · 37% used"). A bare
+  percentage somewhere on the page (a chart axis, a discount) is ignored.
+- Pages that count down ("84% left") are inverted correctly.
+- If a page can't be read, the ring keeps the last good reading and the
+  card says **Stale** rather than showing a fresh but wrong figure.
+
+If a number still looks wrong, right-click that ring → **Copy diagnostics**
+and paste the result into an issue. It contains the parsed reading and the
+exact text or JSON it was parsed from, so the fix is usually a one-liner.
 
 ## Updates
 
@@ -152,14 +175,18 @@ provider, reads that page on a schedule, and renders the numbers.
   login check, extract, parse). `registry.ts` is the single list —
   **adding an assistant is one file + one line**.
 - **Parsing** (`parseHeuristics.ts`): matches on the *words* a usage page
-  uses ("Current session", "Resets in 51 min", "73%") rather than CSS
+  uses ("Current session", "Resets in 51 min", "73% used") rather than CSS
   selectors, because wording survives redesigns far better than markup.
-  Fully unit-tested against page fixtures (`npm test`).
+  A provider can instead return structured data (ChatGPT reads OpenAI's
+  usage endpoint from inside the signed-in window) and mark the reading
+  `complete`. Fully unit-tested against page fixtures and captured
+  responses (`npm test`).
 - **Scraping** (`src/main/scraping/`): one hidden persistent-session window
   per provider, staggered polling, a hard per-fetch timeout, and a
-  never-throws contract — every failure becomes a well-formed snapshot
-  (`ok` / `stale` / `error` / `logged_out`) that keeps the last good numbers
-  on screen.
+  read-until-stable loop (a page is accepted only once every expected
+  window has a value and two reads agree), and a never-throws contract —
+  every failure becomes a well-formed snapshot (`ok` / `stale` / `error` /
+  `logged_out` / `no_meter`) that keeps the last good numbers on screen.
 - **Persistence** (`src/main/store/`): schema-versioned settings and usage
   cache via `electron-store`. The CLI reads the cache file directly.
 - **IPC**: one channel registry (`src/shared/types.ts`), one typed
@@ -221,10 +248,11 @@ Without these, macOS builds are ad-hoc signed (valid but unverified → one
 
 ## Known limitations
 
-- **Scraping is brittle by nature.** If a provider rewords its usage page,
-  parsing can fail; the popover then shows a clear message and the last
-  extracted text is kept in the cache (`buddyusage --json`) to make fixing
-  the label list quick.
+- **Scraping is brittle by nature** (ChatGPT excepted, which uses a JSON
+  endpoint). If a provider rewords its usage page, parsing fails safe: the
+  ring keeps the last good reading, the card says Stale, and right-click →
+  **Copy diagnostics** (or `buddyusage --json`) gives the exact text so
+  fixing the label list is quick.
 - **Security prompt on first launch** until the release is signed — see
   [Signed releases](#signed-releases-no-security-prompts).
 - **Best tested on macOS.** Windows and Linux builds ship from the same
