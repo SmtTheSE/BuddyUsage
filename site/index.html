@@ -95,6 +95,12 @@
     .feature-row .serif-h { margin-bottom: 16px; }
     .feature-row p { font-size: 18px; max-width: 46ch; }
     .feature-row .link { display: inline-block; margin-top: 22px; }
+    /* Landscape screenshots are shown whole: cropping a dashboard hides the point of it. */
+    .wide-shot { margin: 0; }
+    /* A dashboard needs room to stay legible, so it gets the wider half. */
+    .feature-row--wide { grid-template-columns: 0.8fr 1.2fr; gap: 48px; }
+    .feature-row--wide p + p { margin-top: 14px; }
+    .wide-shot img { width: 100%; height: auto; display: block; border-radius: 20px; background: var(--dark); box-shadow: 0 18px 50px rgba(20, 20, 19, 0.16); }
 
     /* list with metadata columns (anthropic "Latest releases") */
     .list { margin-top: 36px; border-top: 1px solid var(--line); }
@@ -153,7 +159,7 @@
     .foot .copy { color: var(--ink-3); line-height: 1.6; }
 
     @media (max-width: 900px) {
-      .hero__grid, .feature-row, .row, .tour { grid-template-columns: 1fr; gap: 24px; }
+      .hero__grid, .feature-row, .feature-row--wide, .row, .tour { grid-template-columns: 1fr; gap: 24px; }
       .cards { grid-template-columns: 1fr; }
       .foot { grid-template-columns: 1fr 1fr; }
       .nav-links > a { display: none; }
@@ -175,6 +181,7 @@
       <a class="wordmark" href="#"><img src="icon.png" alt="" />BuddyUsage</a>
       <div class="nav-links">
         <a href="#tour">Product</a>
+        <a href="#activity">Activity</a>
         <a href="#install">Install</a>
         <a href="https://github.com/SmtTheSE/BuddyUsage" target="_blank" rel="noopener">GitHub</a>
         <span class="btn btn-dark btn-split"><a href="#install">Download</a><a href="https://github.com/SmtTheSE/BuddyUsage/releases/latest" target="_blank" rel="noopener" aria-label="All downloads">⌄</a></span>
@@ -216,12 +223,23 @@
           <figcaption><span class="label">Collapsed</span>Tuck it into a slim tab with status dots. Hover to peek. Drag it anywhere and it snaps to the nearest edge. A breathing dot means an agent is running; yellow means it is waiting for you.</figcaption>
         </figure>
         <figure class="shot">
-          <img src="shot-activity.jpg" alt="The Activity window: tokens by day, by project and by model" loading="lazy" width="1640" height="1290" />
-          <figcaption><span class="label">Activity</span>Where your week went: tokens by project, by model and by day, read from the session logs on your own computer. No provider shows you this.</figcaption>
-        </figure>
-        <figure class="shot">
           <img src="shot-settings.jpg" alt="Settings: provider switches, refresh interval, screen edge, appearance" loading="lazy" width="940" height="1520" />
           <figcaption><span class="label">Settings</span>Pick your assistants, refresh rate, screen edge and appearance. Turn on the limit guard to pause agents past 90%, install waiting-for-you alerts, and scan a QR code to stop or nudge an agent from your phone.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="activity" class="rule">
+    <div class="wrap">
+      <div class="feature-row feature-row--wide">
+        <div>
+          <h2 class="display serif-h">Where your week went</h2>
+          <p>Your plan tells you how much is left. It never tells you what spent it. BuddyUsage reads the session logs Claude Code and Codex already keep on your computer and shows the tokens by project, by model and by day.</p>
+          <p>Nothing is uploaded, no API key is involved, and it works whether or not the app was open at the time.</p>
+        </div>
+        <figure class="wide-shot">
+          <img src="shot-activity.jpg" alt="The Activity window: tokens by day, by project and by model, with totals for the last seven days" loading="lazy" width="1640" height="1290" />
         </figure>
       </div>
     </div>
