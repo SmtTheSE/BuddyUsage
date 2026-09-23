@@ -2,6 +2,10 @@
 
 **Website & install guide:** https://smtthese.github.io/BuddyUsage/
 
+<p align="center">
+  <img src="docs/demo.gif" alt="The BuddyUsage island on the edge of the screen: rings per assistant, a card with session and weekly limits, the pace line, running agent sessions with Stop, and a nudge box" width="440" />
+</p>
+
 A small island, docked to the edge of your screen, that shows how much
 of your **Claude**, **ChatGPT / Codex**, **Gemini**, **Cursor** and **GitHub Copilot** plan you've used —
 without alt-tabbing into each provider's website. It also watches the
@@ -100,14 +104,20 @@ buddyusage open               # launch the app
 
 ## First run
 
-Click a ring → **Sign in** (or use the menu-bar / system-tray icon → Sign
+A short walkthrough opens the first time: pick the assistants you use,
+sign in to each one (a real browser window on the provider's own page),
+and a note on where the island lives. Skippable, and everything in it is
+in Settings afterwards.
+
+After that: click a ring → **Sign in** (or use the menu-bar / system-tray icon → Sign
 in). A real browser window opens on that provider's own login page.
 Sessions are kept in an isolated, persistent partition per provider, so you
 do this once. On Windows the icon may sit behind the `^` overflow arrow next
 to the clock; drag it onto the taskbar to keep it visible.
 
 Drag the island anywhere — it snaps to the nearest screen edge and remembers
-the spot. Hover it for the `›` handle to collapse it into a slim tab.
+the spot. Hover it for the `›` handle to collapse it into a slim tab, or
+turn on **Hide the island** to live in the menu bar alone.
 
 ## What each plan can show
 
@@ -121,6 +131,9 @@ honest states rather than errors:
 | **Gemini** (gemini.google.com → Settings → Usage limits) | Current usage + weekly limit with resets; the plan badge only appears when the page names the plan | **Real gauges** — Google shows the panel for free accounts too (badge: Free). Flash-Lite chats barely move it; Pro/Thinking models and the Gemini CLI do |
 | **Cursor** (cursor.com → Dashboard → Usage) · off by default | Included usage per model pool in dollars, monthly reset | Hobby plan shows included usage once used |
 | **GitHub Copilot** (github.com → Settings → Billing → Metered usage) · off by default | AI Credits used of included (legacy plans: premium requests), monthly reset | Copilot Free shows metered usage once there is any |
+| **Windsurf** · off by default | Prompt and flow credits against the monthly pool | Free tier reports its smaller pool the same way |
+| **OpenRouter** · off by default | Credits used this month | Pay as you go, so a balance only appears once credits are bought |
+| **Anthropic API** / **OpenAI API** · off by default | Month-to-date spend against the organisation's limit | No percentage until a budget is configured |
 
 ## Agent control
 
@@ -142,6 +155,24 @@ The hook listener always runs on `127.0.0.1:47831` (next free port if taken;
 installed hooks are re-pointed automatically). It binds to the network only
 while Phone remote is on. Every URL carries the secret; without it the
 server answers 404. **New secret** in Settings revokes old links.
+
+## Your agents can read their own budget (MCP)
+
+BuddyUsage runs as an MCP server, so the assistants themselves can check
+how much is left before starting something expensive:
+
+```bash
+claude mcp add buddyusage -- buddyusage mcp     # Claude Code
+codex mcp add buddyusage -- buddyusage mcp      # Codex CLI
+```
+
+Three read-only tools, all answered from the local cache:
+
+| Tool | Answers |
+| --- | --- |
+| `get_usage` | Every connected assistant: percentage per limit window, reset times, plan |
+| `get_activity` | Tokens by project and model for the last N days |
+| `check_budget` | One verdict — `ok`, `tight` or `exhausted` — with the limiting window and what to do |
 
 ## Activity: where your week went
 
@@ -219,6 +250,24 @@ site:
 | A limit resets | "Resets in 51 min" / "at 7:07 PM" / "Sep 22 at 11:07 PM" is parsed and a re-sync is scheduled just after, so the ring drops to 0% on its own |
 | Wake from sleep | Everything re-syncs a few seconds after resume |
 | You open a card | If its data is older than 45 s it quietly refreshes, showing "Updating…" inline |
+
+## Privacy, and verifying a download
+
+Nothing leaves your machine: no server, no telemetry, no account. Sessions
+live in an isolated store per provider and are sent only to that
+provider's own domain. The full statement, including how the phone remote
+and the CLI hooks are bounded, is in [SECURITY.md](SECURITY.md).
+
+Every release publishes `SHA256SUMS.txt` and a signed build-provenance
+attestation from the GitHub workflow that produced it:
+
+```bash
+gh attestation verify BuddyUsage-arm64.dmg --repo SmtTheSE/BuddyUsage
+shasum -a 256 -c SHA256SUMS.txt --ignore-missing
+```
+
+Packaging and signing plans (Apple Developer ID, SignPath for Windows,
+winget, Scoop, Homebrew core) are in [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
 
 ## Why it works this way
 

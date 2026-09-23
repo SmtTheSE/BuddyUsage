@@ -174,8 +174,8 @@ export function installDevMock(): void {
     regenerateRemote: async () => ({ enabled: false, addresses: [], port: 47831 }),
     getUpdateState: async () => ({
       status: quiet ? 'up_to_date' : 'available',
-      currentVersion: '0.2.5',
-      latestVersion: '0.3.0',
+      currentVersion: '0.5.1',
+      latestVersion: '0.6.0',
       releaseUrl: 'https://github.com/SmtTheSE/BuddyUsage/releases/latest',
       downloadUrl: 'https://example.invalid',
       downloadSize: 100_000_000
