@@ -11,7 +11,15 @@ you, guard your limits, and do all of that from your phone.
 
 One ring per assistant, coloured by how close you are to the limit. Hover a
 ring for the detailed breakdown (session limit, weekly limit, when each
-resets). Right-click for sign-in, refresh, dashboard, settings.
+resets, and whether your current pace makes it to the reset). Right-click
+for sign-in, refresh, activity, dashboard, settings.
+
+**At a glance:** live gauges for five assistants · a pace line that says
+when a window will run dry · notifications before you hit a limit ·
+[Activity](#activity-where-your-week-went): tokens by project and model,
+read from your own machine · [agent control](#agent-control): see, stop,
+nudge and guard the CLI sessions spending those limits, from your desk or
+your phone.
 
 ## Install
 
@@ -83,10 +91,11 @@ open-source projects for free; the workflow accepts a standard `.pfx` via
 
 ```bash
 npm install -g github:SmtTheSE/BuddyUsage
-buddyusage            # usage table for every provider
-buddyusage --json     # machine-readable
-buddyusage install    # download + install the latest release
-buddyusage open       # launch the app
+buddyusage                    # usage table for every provider
+buddyusage --json             # machine-readable
+buddyusage activity --days=7  # tokens by project and model
+buddyusage install            # download + install the latest release
+buddyusage open               # launch the app
 ```
 
 ## First run
