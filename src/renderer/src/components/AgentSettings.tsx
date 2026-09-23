@@ -60,8 +60,78 @@ export function AgentSettings(): JSX.Element | null {
     }
   }
 
+  const alerts = settings.alerts
+
+  function toggleThreshold(value: number): void {
+    const next = alerts.thresholds.includes(value)
+      ? alerts.thresholds.filter((t) => t !== value)
+      : [...alerts.thresholds, value].sort((a, b) => a - b)
+    void updateSettings({ alerts: { ...alerts, thresholds: next } })
+  }
+
   return (
     <>
+      <motion.section className="card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_SPRING, delay: 0.08 }}>
+        <h2 className="card__title">Alerts</h2>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Tell me before I hit a limit</span>
+            <span className="row__hint">A notification the first time a limit passes each mark, once per window.</span>
+          </span>
+          <Switch checked={alerts.enabled} label="Alerts" onChange={(enabled) => void updateSettings({ alerts: { ...alerts, enabled } })} />
+        </div>
+        {alerts.enabled && (
+          <>
+            <div className="row">
+              <span className="row__main">
+                <span className="row__label">At</span>
+              </span>
+              <span className="chips">
+                {[50, 80, 95, 100].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={alerts.thresholds.includes(value)}
+                    className={alerts.thresholds.includes(value) ? 'chip chip--on' : 'chip'}
+                    onClick={() => toggleThreshold(value)}
+                  >
+                    {value}%
+                  </button>
+                ))}
+              </span>
+            </div>
+            <div className="row">
+              <span className="row__main">
+                <span className="row__label">On pace to run out</span>
+                <span className="row__hint">One heads-up when the current rate would empty a window before it resets.</span>
+              </span>
+              <Switch checked={alerts.onPace} label="Pace alert" onChange={(onPace) => void updateSettings({ alerts: { ...alerts, onPace } })} />
+            </div>
+            <div className="row">
+              <span className="row__main">
+                <span className="row__label">When a limit resets</span>
+              </span>
+              <Switch checked={alerts.onReset} label="Reset alert" onChange={(onReset) => void updateSettings({ alerts: { ...alerts, onReset } })} />
+            </div>
+          </>
+        )}
+      </motion.section>
+
+      <motion.section className="card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_SPRING, delay: 0.09 }}>
+        <h2 className="card__title">Activity</h2>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Where your tokens went</span>
+            <span className="row__hint">
+              Tokens by project, model and day, read from the session logs Claude Code and Codex keep on this computer. Nothing is uploaded.
+            </span>
+          </span>
+          <button className="button button--small button--tinted" onClick={() => void window.buddyUsage.openActivity()}>
+            Open
+          </button>
+        </div>
+      </motion.section>
+
       <motion.section className="card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SECTION_SPRING, delay: 0.1 }}>
         <h2 className="card__title">Agents</h2>
         <p className="row__hint" style={{ padding: '0 0 10px' }}>

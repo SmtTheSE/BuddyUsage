@@ -74,6 +74,7 @@ export function installDevMock(): void {
     launchAtLogin: false,
     theme,
     limitGuard: { enabled: true, percent: 90, providers: {} },
+    alerts: { enabled: true, thresholds: [80, 95, 100], onReset: false, onPace: true, providers: {} },
     agentAlerts: true,
     remoteEnabled: false,
     remoteToken: 'devtoken'
@@ -89,6 +90,45 @@ export function installDevMock(): void {
         ]
   }
   const noop = async (): Promise<void> => undefined
+  const mockActivity = (rangeDays: number) => {
+    const day = (back: number): string => {
+      const d = new Date(Date.now() - back * 86400000)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    }
+    const shape = [0.42, 0.61, 0.28, 0.93, 0.7, 0.55, 0.12, 0.8, 0.35, 0.66]
+    return {
+      rangeDays,
+      generatedAt: new Date().toISOString(),
+      scanning: false,
+      lastScanAt: new Date().toISOString(),
+      totalTokens: 2_010_000_000,
+      inputTokens: 41_000_000,
+      outputTokens: 12_400_000,
+      cacheReadTokens: 1_890_000_000,
+      cacheWriteTokens: 66_000_000,
+      turns: 4738,
+      byProvider: [
+        { label: 'Claude', tokens: 1_700_000_000, share: 85, providerIds: ['claude'] },
+        { label: 'ChatGPT', tokens: 310_000_000, share: 15, providerIds: ['chatgpt'] }
+      ],
+      byProject: [
+        { label: 'BuddyUsage', tokens: 502_000_000, share: 25, providerIds: ['claude'] },
+        { label: 'HeadRoom', tokens: 482_000_000, share: 24, providerIds: ['claude'] },
+        { label: 'Portfolio', tokens: 442_000_000, share: 22, providerIds: ['claude'] },
+        { label: 'accessibility-comp', tokens: 221_000_000, share: 11, providerIds: ['chatgpt'] },
+        { label: 'FurYears', tokens: 180_000_000, share: 9, providerIds: ['claude'] },
+        { label: 'focus-loop', tokens: 60_000_000, share: 3, providerIds: ['chatgpt'] }
+      ],
+      byModel: [
+        { label: 'Opus 5', tokens: 1_768_000_000, share: 88, providerIds: ['claude'] },
+        { label: 'Sonnet 5', tokens: 241_000_000, share: 12, providerIds: ['claude'] }
+      ],
+      byDay: Array.from({ length: rangeDays }, (_, i) => ({
+        date: day(rangeDays - 1 - i),
+        tokens: Math.round(shape[(rangeDays - 1 - i) % shape.length] * 5e8)
+      }))
+    }
+  }
 
   window.buddyUsage = {
     listProviders: async () => providers,
@@ -123,6 +163,11 @@ export function installDevMock(): void {
     installHooks: async (providerId) => ({ providerId, status: 'installed' as const }),
     uninstallHooks: async (providerId) => ({ providerId, status: 'not_installed' as const }),
     getRemoteInfo: async () => ({ enabled: false, addresses: [], port: 47831 }),
+    openActivity: noop,
+    getActivity: async (rangeDays: number) => mockActivity(rangeDays),
+    rescanActivity: async (rangeDays: number) => mockActivity(rangeDays),
+    getForecasts: async () => ({ claude: { ratePerHour: 12.4, projectedAtReset: 118, willRunOut: true, emptyAt: new Date(Date.now() + 82 * 60000).toISOString() } }),
+    onActivityUpdated: () => () => undefined,
     regenerateRemote: async () => ({ enabled: false, addresses: [], port: 47831 }),
     getUpdateState: async () => ({
       status: quiet ? 'up_to_date' : 'available',

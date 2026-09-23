@@ -134,6 +134,32 @@ installed hooks are re-pointed automatically). It binds to the network only
 while Phone remote is on. Every URL carries the secret; without it the
 server answers 404. **New secret** in Settings revokes old links.
 
+## Activity: where your week went
+
+No provider tells you *which project* or *which model* spent your limit.
+BuddyUsage reads the transcripts Claude Code and Codex already write on
+this machine (`~/.claude/projects`, `~/.codex/sessions`) and shows tokens
+by **project**, by **model**, by **day** — in a window from the card's
+**Activity** link, the tray, or Settings. Nothing is uploaded, no account
+or API key is involved, and the scan is incremental (a gigabyte of logs
+takes a couple of seconds once, then milliseconds).
+
+```bash
+buddyusage activity --days=7        # same report in the terminal
+buddyusage activity --days=30 --json
+```
+
+Gemini CLI does not record per-turn token counts yet, so it is absent from
+the breakdown; its gauge still works.
+
+## Knowing before you hit the wall
+
+| | |
+| --- | --- |
+| **Pace line** | Each card says what the percentage can't: *"At ~12%/h this empties in 1 h 20 m, before it resets"* or *"At this pace, about 38% left at reset."* Derived from the polling the app already does, and shown only when there is enough signal to mean something. |
+| **Model hint** | When one window is tight and a sibling is not — Opus 92%, Sonnet 31% — the card says so, because switching model is the cheapest saving there is. |
+| **Alerts** | A notification the first time a limit passes each mark you pick (50 / 80 / 95 / 100%), once per window. Optional extras: one heads-up when the current pace would exhaust a window early, and one when a limit resets. |
+
 ## Never a guessed number
 
 A wrong percentage is worse than no percentage, so the app is strict about

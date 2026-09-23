@@ -1196,3 +1196,225 @@ body[data-route='settings'] #root {
   white-space: nowrap;
   opacity: 0.85;
 }
+
+/* ---------------------------------------------------------------------------
+   Activity: the local usage report (its own window).
+   --------------------------------------------------------------------------- */
+body[data-route='activity'] {
+  background: var(--page-bg);
+  overflow: auto;
+}
+body[data-route='activity'] #root {
+  height: auto;
+  min-height: 100%;
+}
+.activity {
+  padding: 40px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 13px;
+  -webkit-app-region: drag;
+}
+.activity button,
+.activity .card,
+.activity .segmented {
+  -webkit-app-region: no-drag;
+}
+.activity__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.activity__head h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+.activity__sub {
+  margin: 4px 0 0;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 12px;
+}
+.activity__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.activity__blank {
+  padding: 22px 16px 24px;
+}
+.activity__blank p {
+  color: var(--muted);
+  margin: 6px 0 0;
+  max-width: 48ch;
+}
+.activity__empty {
+  color: var(--muted);
+  padding: 4px 0 10px;
+}
+.activity__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 11.5px;
+  padding: 2px 2px 8px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.stat {
+  background: var(--glass-bg);
+  border-radius: 16px;
+  box-shadow: var(--glass-inner), var(--glass-shadow);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat__value {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.stat__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.days {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 132px;
+  padding: 6px 0 10px;
+}
+.day {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+.day__bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.day__bar {
+  width: min(100%, 26px);
+  border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.day__label {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.bar {
+  display: grid;
+  grid-template-columns: minmax(84px, 34%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+.bar__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.bar__track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bar-track);
+  overflow: hidden;
+}
+.bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, transparent));
+}
+.bar__value {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  min-width: 74px;
+  text-align: right;
+}
+.bar__tokens {
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+/* The one-line "what this means" under the gauges. */
+.insight {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.insight__note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.insight__note--warn {
+  color: #ffb4a0;
+}
+
+/* Small multi-select chips (alert thresholds). */
+.chips {
+  display: flex;
+  gap: 6px;
+}
+.chip {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--control-border);
+  background: var(--control-bg);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.chip:hover {
+  background: var(--control-bg-hover);
+}
+.chip--on {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}

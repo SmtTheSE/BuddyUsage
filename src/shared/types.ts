@@ -130,6 +130,44 @@ export interface AgentsState {
   scanAvailable: boolean
 }
 
+/** One row of the Activity view: a project, a model or a provider. */
+/** Pace of a limit window and what it implies, when there is enough signal. */
+export interface UsageForecast {
+  /** Percentage points consumed per hour over the recent run. */
+  ratePerHour: number
+  /** When the window would hit 100% at this pace. */
+  emptyAt?: string
+  /** Percentage this window is projected to reach by its reset. */
+  projectedAtReset?: number
+  /** True when the projection reaches 100% before the reset. */
+  willRunOut?: boolean
+}
+
+export interface ActivityRow {
+  label: string
+  tokens: number
+  /** Percentage of the range's total, rounded. */
+  share: number
+  providerIds: ProviderId[]
+}
+
+export interface ActivityReport {
+  rangeDays: number
+  generatedAt: string
+  scanning: boolean
+  lastScanAt?: string
+  totalTokens: number
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  turns: number
+  byProvider: ActivityRow[]
+  byProject: ActivityRow[]
+  byModel: ActivityRow[]
+  byDay: { date: string; tokens: number }[]
+}
+
 export interface NudgeResult {
   providerId: ProviderId
   ok: boolean
@@ -156,6 +194,17 @@ export interface RemoteInfo {
   qrSvg?: string
   addresses: string[]
   port: number
+}
+
+export interface AlertSettings {
+  enabled: boolean
+  /** Percentages that raise a notification, once per limit window. */
+  thresholds: number[]
+  /** Notify when a limit window rolls over. */
+  onReset: boolean
+  /** Notify when the current pace would exhaust the window before it resets. */
+  onPace: boolean
+  providers: Record<ProviderId, boolean>
 }
 
 export interface LimitGuardSettings {
@@ -191,6 +240,8 @@ export interface AppSettings {
   limitGuard: LimitGuardSettings
   /** System notifications for hook events (waiting for permission, finished). */
   agentAlerts: boolean
+  /** Threshold / reset / pace notifications. */
+  alerts: AlertSettings
   /** Serve the phone page on the LAN. Off → hooks only, bound to localhost. */
   remoteEnabled: boolean
   /** Secret in the remote/hook URLs; regenerate to revoke. */
@@ -198,6 +249,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_LIMIT_GUARD_PERCENT = 90
+export const DEFAULT_ALERT_THRESHOLDS = [80, 95, 100]
 
 export const DEFAULT_REFRESH_INTERVAL_MINUTES = 3
 export const MIN_REFRESH_INTERVAL_MINUTES = 1
@@ -260,5 +312,10 @@ export const IpcChannel = {
   HooksInstall: 'hooks:install',
   HooksUninstall: 'hooks:uninstall',
   RemoteInfo: 'remote:info',
-  RemoteRegenerate: 'remote:regenerate'
+  RemoteRegenerate: 'remote:regenerate',
+  ActivityGet: 'activity:get',
+  ActivityRescan: 'activity:rescan',
+  ActivityUpdated: 'activity:updated',
+  ForecastGetAll: 'forecast:getAll',
+  WindowOpenActivity: 'window:openActivity'
 } as const

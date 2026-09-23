@@ -1,5 +1,13 @@
 import { create } from 'zustand'
-import type { AgentSession, AgentsState, AppSettings, ProviderMeta, UpdateState, UsageSnapshot } from '@shared/types'
+import type {
+  AgentSession,
+  AgentsState,
+  AppSettings,
+  ProviderMeta,
+  UpdateState,
+  UsageForecast,
+  UsageSnapshot
+} from '@shared/types'
 
 interface AppState {
   providers: ProviderMeta[]
@@ -8,6 +16,7 @@ interface AppState {
   syncing: Record<string, boolean>
   update: UpdateState | null
   agents: AgentsState
+  forecasts: Record<string, UsageForecast>
   init: () => Promise<void>
   refresh: (providerId?: string) => Promise<void>
   openLogin: (providerId: string) => Promise<void>
@@ -22,6 +31,7 @@ export const useAppStore = create<AppState>((set) => ({
   syncing: {},
   update: null,
   agents: { sessions: [], paused: [], scanAvailable: true },
+  forecasts: {},
 
   init: async () => {
     const [providers, snapshots, settings, syncing, update, agents] = await Promise.all([
@@ -41,10 +51,15 @@ export const useAppStore = create<AppState>((set) => ({
       usageByProvider: Object.fromEntries(snapshots.map((s) => [s.providerId, s]))
     })
     window.buddyUsage.onAgentsUpdated((agents) => set({ agents }))
+    // The pace is derived from polled history, so it only changes when a
+    // snapshot does; refresh it alongside.
+    const pullForecasts = (): void => void window.buddyUsage.getForecasts().then((forecasts) => set({ forecasts }))
+    pullForecasts()
     window.buddyUsage.onUsageUpdated((snapshot) => {
       set((state) => ({
         usageByProvider: { ...state.usageByProvider, [snapshot.providerId]: snapshot }
       }))
+      pullForecasts()
     })
     window.buddyUsage.onSettingsUpdated((next) => set({ settings: next }))
     window.buddyUsage.onSyncStateChanged(({ providerId, syncing }) =>

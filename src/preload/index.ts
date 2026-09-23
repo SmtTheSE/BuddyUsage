@@ -1,12 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannel } from '@shared/types'
 import type {
+  ActivityReport,
   AgentsState,
   AppSettings,
   HookStatus,
   NudgeResult,
   ProviderMeta,
   RemoteInfo,
+  UsageForecast,
   SyncState,
   UpdateState,
   UsageSnapshot
@@ -71,6 +73,13 @@ const api = {
   installHooks: (providerId: string): Promise<HookStatus> => ipcRenderer.invoke(IpcChannel.HooksInstall, providerId),
   uninstallHooks: (providerId: string): Promise<HookStatus> => ipcRenderer.invoke(IpcChannel.HooksUninstall, providerId),
   getRemoteInfo: (): Promise<RemoteInfo> => ipcRenderer.invoke(IpcChannel.RemoteInfo),
+
+  // Local insights
+  openActivity: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowOpenActivity),
+  getActivity: (rangeDays: number): Promise<ActivityReport> => ipcRenderer.invoke(IpcChannel.ActivityGet, rangeDays),
+  rescanActivity: (rangeDays: number): Promise<ActivityReport> => ipcRenderer.invoke(IpcChannel.ActivityRescan, rangeDays),
+  getForecasts: (): Promise<Record<string, UsageForecast>> => ipcRenderer.invoke(IpcChannel.ForecastGetAll),
+  onActivityUpdated: (callback: (scanning: boolean) => void): (() => void) => subscribe(IpcChannel.ActivityUpdated, callback),
   regenerateRemote: (): Promise<RemoteInfo> => ipcRenderer.invoke(IpcChannel.RemoteRegenerate)
 }
 

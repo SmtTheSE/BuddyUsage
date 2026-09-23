@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { useAppStore } from './state/store'
 import { Island } from './components/Island'
 import { SettingsView } from './components/SettingsView'
+import { ActivityView } from './components/ActivityView'
 
-type Route = 'island' | 'settings'
+type Route = 'island' | 'settings' | 'activity'
 
 function routeFromHash(): Route {
-  return window.location.hash === '#settings' ? 'settings' : 'island'
+  if (window.location.hash === '#settings') return 'settings'
+  if (window.location.hash === '#activity') return 'activity'
+  return 'island'
 }
 
 /** One renderer bundle serves both windows; the URL hash picks the view. */
@@ -37,5 +40,7 @@ export function App(): JSX.Element {
     return () => media.removeEventListener('change', apply)
   }, [theme])
 
-  return route === 'settings' ? <SettingsView /> : <Island />
+  if (route === 'settings') return <SettingsView />
+  if (route === 'activity') return <ActivityView />
+  return <Island />
 }

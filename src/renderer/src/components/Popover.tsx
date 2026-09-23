@@ -6,6 +6,7 @@ import { formatUntil, hasReadings, relativeSyncLabel, usageColor } from '../lib/
 import { useAppStore } from '../state/store'
 import { UpdateBanner } from './UpdateBanner'
 import { AgentPanel } from './AgentPanel'
+import { InsightLine } from './InsightLine'
 
 interface PopoverProps {
   provider: ProviderMeta
@@ -25,6 +26,7 @@ const SYNC_LABEL_TICK_MS = 10_000
 export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter, onMouseLeave }: PopoverProps): JSX.Element {
   const { refresh, openLogin, openDashboard } = useAppStore()
   const syncing = useAppStore((s) => s.syncing[provider.id] === true)
+  const forecast = useAppStore((s) => s.forecasts[provider.id])
   const [busy, setBusy] = useState(false)
   const [, tick] = useState(0)
   const status = snapshot?.status ?? 'loading'
@@ -142,6 +144,8 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
         </div>
       )}
 
+      <InsightLine snapshot={snapshot} forecast={forecast} />
+
       <AgentPanel provider={provider} />
 
       <UpdateBanner compact />
@@ -175,6 +179,9 @@ export function Popover({ provider, snapshot, edge, pinned = false, onMouseEnter
             aria-label={`Refresh ${provider.name}`}
           >
             Refresh
+          </button>
+          <button className="link" onClick={() => void window.buddyUsage.openActivity()} title="Where your tokens went, by project and model">
+            Activity
           </button>
           <button className="link" onClick={() => void openDashboard(provider.id)}>
             Open ↗

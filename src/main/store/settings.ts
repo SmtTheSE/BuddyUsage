@@ -1,10 +1,10 @@
 import Store from 'electron-store'
 import type { AppSettings } from '@shared/types'
-import { DEFAULT_LIMIT_GUARD_PERCENT, DEFAULT_REFRESH_INTERVAL_MINUTES } from '@shared/types'
+import { DEFAULT_ALERT_THRESHOLDS, DEFAULT_LIMIT_GUARD_PERCENT, DEFAULT_REFRESH_INTERVAL_MINUTES } from '@shared/types'
 import { randomBytes } from 'crypto'
 import { providerRegistry } from '../providers/registry'
 
-const CURRENT_SCHEMA_VERSION = 4
+const CURRENT_SCHEMA_VERSION = 5
 
 function defaultSettings(): AppSettings {
   return {
@@ -19,6 +19,7 @@ function defaultSettings(): AppSettings {
     launchAtLogin: false,
     theme: 'auto',
     limitGuard: { enabled: false, percent: DEFAULT_LIMIT_GUARD_PERCENT, providers: {} },
+    alerts: { enabled: true, thresholds: DEFAULT_ALERT_THRESHOLDS, onReset: false, onPace: true, providers: {} },
     agentAlerts: true,
     remoteEnabled: false,
     remoteToken: randomBytes(16).toString('hex')
@@ -51,7 +52,8 @@ function migrate(stored: Partial<AppSettings> & Record<string, unknown>): AppSet
     // users still on the old default.
     next = { ...next, refreshIntervalMinutes: defaults.refreshIntervalMinutes }
   }
-  // v3 -> v4 (agent control): new fields simply take their defaults, but
+  // v4 -> v5 (alerts) and v3 -> v4 (agent control): new fields take their
+  // defaults, but
   // the token must be generated once and then kept, not re-rolled per read.
   const merged = { ...defaults, ...next, schemaVersion: CURRENT_SCHEMA_VERSION } as AppSettings
   if (!next.remoteToken) store.set('settings', merged)

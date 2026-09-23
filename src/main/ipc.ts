@@ -7,6 +7,8 @@ import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
 import { getIslandWindow, repositionIslandWindow, setIgnoreMouse, setIslandFocusable } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
+import { openActivityWindow } from './windows/activityWindow'
+import { allForecasts, getActivity, rescanActivity } from './insights'
 import { refreshTrayTitle } from './tray'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
 import { applyAgentSettings, currentRemoteInfo, getAgentsState, hookTarget, providerMetas, regenerateRemoteToken } from './agents'
@@ -111,6 +113,10 @@ export function registerIpcHandlers(): void {
     openSettingsWindow()
   })
 
+  ipcMain.handle(IpcChannel.WindowOpenActivity, () => void openActivityWindow())
+  ipcMain.handle(IpcChannel.ActivityGet, (_e, rangeDays: number) => getActivity(rangeDays))
+  ipcMain.handle(IpcChannel.ActivityRescan, (_e, rangeDays: number) => rescanActivity(rangeDays))
+  ipcMain.handle(IpcChannel.ForecastGetAll, () => allForecasts())
   ipcMain.handle(IpcChannel.WindowSetFocusable, (_e, focusable: boolean) => setIslandFocusable(focusable === true))
   ipcMain.handle(IpcChannel.AppQuit, () => app.quit())
 
@@ -145,6 +151,7 @@ export function registerIpcHandlers(): void {
 
     template.push(
       { label: 'Refresh all', click: () => void refreshProviderNow() },
+      { label: 'Activity…', click: () => void openActivityWindow() },
       { label: 'Settings…', click: () => openSettingsWindow() },
       { type: 'separator' },
       { label: 'Quit BuddyUsage', click: () => app.quit() }

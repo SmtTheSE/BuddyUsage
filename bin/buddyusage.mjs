@@ -28,11 +28,15 @@ const color = {
   bold: (s) => `\x1b[1m${s}\x1b[0m`
 }
 
-function cachePath() {
+function storePath(file) {
   const os = platform()
-  if (os === 'darwin') return join(homedir(), 'Library', 'Application Support', APP_NAME, 'buddy-usage-cache.json')
-  if (os === 'win32') return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), APP_NAME, 'buddy-usage-cache.json')
-  return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), APP_NAME, 'buddy-usage-cache.json')
+  if (os === 'darwin') return join(homedir(), 'Library', 'Application Support', APP_NAME, file)
+  if (os === 'win32') return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), APP_NAME, file)
+  return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), APP_NAME, file)
+}
+
+function cachePath() {
+  return storePath('buddy-usage-cache.json')
 }
 
 function readCache() {
@@ -207,6 +211,56 @@ async function install(args) {
   if (os !== 'win32') launch()
 }
 
+/** The activity report the app keeps: tokens per project/model/day, read from the CLIs' own logs. */
+function activity(args) {
+  const days = Number((args.find((a) => a.startsWith('--days=')) ?? '').split('=')[1]) || 7
+  const path = storePath('buddy-usage-activity.json')
+  if (!existsSync(path)) {
+    console.error(`No activity data yet. Open ${APP_NAME} once so it can read your session logs.`)
+    process.exit(1)
+  }
+  const index = JSON.parse(readFileSync(path, 'utf8')).days ?? {}
+  const from = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10)
+  const projects = new Map()
+  const models = new Map()
+  let total = 0
+  let turns = 0
+  for (const [day, providers] of Object.entries(index)) {
+    if (day < from) continue
+    for (const projectsByProvider of Object.values(providers)) {
+      for (const [projectPath, byModel] of Object.entries(projectsByProvider)) {
+        for (const [model, t] of Object.entries(byModel)) {
+          const name = projectPath === 'unknown' ? 'unknown' : projectPath.split('/').pop()
+          projects.set(name, (projects.get(name) ?? 0) + t.total)
+          models.set(model, (models.get(model) ?? 0) + t.total)
+          total += t.total
+          turns += t.turns ?? 0
+        }
+      }
+    }
+  }
+  if (args.includes('--json')) {
+    console.log(JSON.stringify({ days, total, turns, projects: Object.fromEntries(projects), models: Object.fromEntries(models) }, null, 2))
+    return
+  }
+  const compact = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : String(n))
+  console.log(`\n${color.bold(`Last ${days} day${days === 1 ? '' : 's'}`)}  ${compact(total)} tokens · ${turns.toLocaleString()} turns\n`)
+  const show = (title, map) => {
+    const rows = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+    if (rows.length === 0) return
+    console.log(color.dim(title))
+    const max = rows[0][1] || 1
+    for (const [label, value] of rows) {
+      const width = Math.max(1, Math.round((value / max) * 22))
+      const share = total ? Math.round((value / total) * 100) : 0
+      console.log(`  ${label.padEnd(24).slice(0, 24)} ${color.green('█'.repeat(width)).padEnd(22)} ${String(share).padStart(3)}%  ${compact(value)}`)
+    }
+    console.log('')
+  }
+  show('By project', projects)
+  show('By model', models)
+}
+
 function help() {
   console.log(`${color.bold('buddyusage')} — AI coding assistant usage at a glance
 
@@ -216,6 +270,9 @@ Usage:
   buddyusage install [--version=vX.Y.Z]
                                  Download the latest release from GitHub and
                                  install it (macOS, Windows, Linux)
+  buddyusage activity [--days=7] [--json]
+                                 Tokens by project and model, from the
+                                 session logs on this computer
   buddyusage path                Print the cache file the app writes
   buddyusage help                This message`)
 }
@@ -225,6 +282,7 @@ const handlers = {
   status: () => status(rest),
   open,
   install: () => install(rest),
+  activity: () => activity(rest),
   path: () => console.log(cachePath()),
   help,
   '--help': help,

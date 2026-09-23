@@ -75,7 +75,12 @@ Nudge. Two tiers:
 
 ---
 
-## 2. Budgeting: turn a percentage into a decision
+## 2. Budgeting: turn a percentage into a decision — **mostly shipped in 0.5.0**
+
+2.1 (pace/forecast), 2.3 (alerts), 2.4 (per-project and per-model
+activity) and 2.5 (model hint) are implemented; see the README's
+*Activity* and *Knowing before you hit the wall* sections. Still open:
+2.2's pace marker drawn on the ring itself.
 
 ### 2.1 Burn rate and forecast — M
 Keep every reading (we already fetch every 3 min). From the slope: "At
