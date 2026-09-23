@@ -17,6 +17,13 @@ import { Readable } from 'node:stream'
 
 const APP_NAME = 'BuddyUsage'
 const REPO = 'SmtTheSE/BuddyUsage'
+const VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+  } catch {
+    return '0.0.0'
+  }
+})()
 const WARN = 40
 const CRITICAL = 70
 
@@ -211,14 +218,10 @@ async function install(args) {
   if (os !== 'win32') launch()
 }
 
-/** The activity report the app keeps: tokens per project/model/day, read from the CLIs' own logs. */
-function activity(args) {
-  const days = Number((args.find((a) => a.startsWith('--days=')) ?? '').split('=')[1]) || 7
+/** Rolls the app's day index up into totals for the last `days` days. */
+function activityReport(days) {
   const path = storePath('buddy-usage-activity.json')
-  if (!existsSync(path)) {
-    console.error(`No activity data yet. Open ${APP_NAME} once so it can read your session logs.`)
-    process.exit(1)
-  }
+  if (!existsSync(path)) return undefined
   const index = JSON.parse(readFileSync(path, 'utf8')).days ?? {}
   const from = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10)
   const projects = new Map()
@@ -239,8 +242,22 @@ function activity(args) {
       }
     }
   }
+  return { days, total, turns, projects: Object.fromEntries(projects), models: Object.fromEntries(models) }
+}
+
+/** The activity report the app keeps: tokens per project/model/day, read from the CLIs' own logs. */
+function activity(args) {
+  const days = Number((args.find((a) => a.startsWith('--days=')) ?? '').split('=')[1]) || 7
+  const report = activityReport(days)
+  if (!report) {
+    console.error(`No activity data yet. Open ${APP_NAME} once so it can read your session logs.`)
+    process.exit(1)
+  }
+  const { total, turns } = report
+  const projects = new Map(Object.entries(report.projects))
+  const models = new Map(Object.entries(report.models))
   if (args.includes('--json')) {
-    console.log(JSON.stringify({ days, total, turns, projects: Object.fromEntries(projects), models: Object.fromEntries(models) }, null, 2))
+    console.log(JSON.stringify(report, null, 2))
     return
   }
   const compact = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : String(n))
@@ -261,6 +278,17 @@ function activity(args) {
   show('By model', models)
 }
 
+/** Serve usage over MCP so the agents themselves can check their budget. */
+async function mcp() {
+  const { createServer, serveStdio } = await import('./mcp.mjs')
+  const server = createServer({
+    version: VERSION,
+    readUsage: () => Object.values(readCache()?.snapshots ?? {}),
+    readActivity: (days) => activityReport(days)
+  })
+  serveStdio(server)
+}
+
 function help() {
   console.log(`${color.bold('buddyusage')} — AI coding assistant usage at a glance
 
@@ -273,6 +301,9 @@ Usage:
   buddyusage activity [--days=7] [--json]
                                  Tokens by project and model, from the
                                  session logs on this computer
+  buddyusage mcp                 Run as an MCP server (stdio) so Claude Code,
+                                 Codex and other agents can read your usage:
+                                   claude mcp add buddyusage -- buddyusage mcp
   buddyusage path                Print the cache file the app writes
   buddyusage help                This message`)
 }
@@ -283,6 +314,7 @@ const handlers = {
   open,
   install: () => install(rest),
   activity: () => activity(rest),
+  mcp,
   path: () => console.log(cachePath()),
   help,
   '--help': help,

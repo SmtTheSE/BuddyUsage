@@ -28,7 +28,11 @@ const MARKS: Record<string, string> = {
   chatgpt: OPENAI_PATH,
   gemini: GEMINI_PATH,
   cursor: CURSOR_PATH,
-  copilot: COPILOT_PATH
+  copilot: COPILOT_PATH,
+  // The API providers are the same houses as their assistants, so they
+  // reuse those marks; a distinct ring colour tells them apart.
+  'anthropic-api': CLAUDE_PATH,
+  'openai-api': OPENAI_PATH
 }
 
 export function ProviderIcon({ providerId, name, size = 24, className }: ProviderIconProps): JSX.Element {

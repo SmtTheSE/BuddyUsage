@@ -8,6 +8,10 @@ on:
 
 permissions:
   contents: write
+  # Build provenance: lets anyone verify an installer came from this repo's
+  # workflow rather than someone's laptop (`gh attestation verify <file>`).
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -83,6 +87,43 @@ jobs:
         run: gh release edit "${{ github.ref_name }}" --notes-file .github/release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish checksums and signed build provenance for every installer, so a
+  # download can be verified even though the builds are not notarized.
+  provenance:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" --dir dist \
+            --pattern '*.dmg' --pattern '*.exe' --pattern '*.AppImage' --pattern '*.zip'
+          ls -la dist
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/*'
+
+      - name: Publish SHA-256 checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "$TAG" SHA256SUMS.txt --clobber
 
   # Keep the Homebrew cask in step with the release so
   # `brew install --cask buddyusage` always gets the newest

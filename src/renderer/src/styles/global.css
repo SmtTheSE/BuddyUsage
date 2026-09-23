@@ -1418,3 +1418,144 @@ body[data-route='activity'] #root {
   border-color: transparent;
   color: #fff;
 }
+
+/* ---------------------------------------------------------------------------
+   Welcome: the first-run walkthrough (its own window).
+   --------------------------------------------------------------------------- */
+body[data-route='welcome'] {
+  background: var(--page-bg);
+  overflow: hidden;
+}
+.welcome {
+  height: 100vh;
+  padding: 44px 30px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  -webkit-app-region: drag;
+}
+.welcome button,
+.welcome label,
+.welcome .welcome__row {
+  -webkit-app-region: no-drag;
+}
+.welcome__progress {
+  display: flex;
+  gap: 6px;
+}
+.welcome__tick {
+  height: 3px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--bar-track);
+  transition: background 0.25s ease;
+}
+.welcome__tick--on {
+  background: var(--accent);
+}
+.welcome__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.welcome__title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 6px 0 0;
+}
+.welcome__lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 46ch;
+}
+.welcome__points {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.welcome__points li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.welcome__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+  transform: translateY(-2px);
+}
+.welcome__key {
+  font-weight: 600;
+}
+.welcome__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.welcome__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner);
+  margin-bottom: 8px;
+}
+.welcome__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.welcome__state {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.welcome__state--ok {
+  color: #34c759;
+}
+.welcome__muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+.welcome__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.button--primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+  padding: 9px 20px;
+}
+.button--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Pace tick: where an even burn would have you by now. */
+.ring__pace {
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-linecap: round;
+}

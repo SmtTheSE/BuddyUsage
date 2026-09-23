@@ -76,6 +76,7 @@ const api = {
 
   // Local insights
   openActivity: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowOpenActivity),
+  closeWelcome: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WindowCloseWelcome),
   getActivity: (rangeDays: number): Promise<ActivityReport> => ipcRenderer.invoke(IpcChannel.ActivityGet, rangeDays),
   rescanActivity: (rangeDays: number): Promise<ActivityReport> => ipcRenderer.invoke(IpcChannel.ActivityRescan, rangeDays),
   getForecasts: (): Promise<Record<string, UsageForecast>> => ipcRenderer.invoke(IpcChannel.ForecastGetAll),

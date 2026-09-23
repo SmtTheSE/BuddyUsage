@@ -8,7 +8,7 @@ import { ProviderIcon } from './ProviderIcon'
 import { Popover } from './Popover'
 import { CountUp } from './CountUp'
 import { CoachMark } from './CoachMark'
-import { hasReadings, usageColor, USAGE_COLORS } from '../lib/usageColor'
+import { hasReadings, paceReference, usageColor, USAGE_COLORS } from '../lib/usageColor'
 
 const POPOVER_CLOSE_DELAY_MS = 260
 const PEEK_CLOSE_DELAY_MS = 500
@@ -54,6 +54,8 @@ export function Island(): JSX.Element {
   const edge = state.settings?.edge ?? 'right'
   const collapsed = state.settings?.islandCollapsed ?? false
   const updateReady = state.update?.status === 'available'
+  // The welcome window covers a fresh install; the inline hint is for the
+  // island itself once that window is gone.
   const showCoach = state.settings !== null && !state.settings.onboardingSeen && !collapsed
 
   const [hovered, setHovered] = useState<string | null>(null)
@@ -201,6 +203,7 @@ export function Island(): JSX.Element {
                       percent={hasReadings(snapshot) ? metric?.percentUsed : 0}
                       color={color}
                       loading={!snapshot || snapshot.status === 'loading' || (syncing && !hasReadings(snapshot))}
+                      pacePercent={hasReadings(snapshot) ? paceReference(metric) : undefined}
                     >
                       <ProviderIcon providerId={provider.id} name={provider.name} size={28} />
                     </Ring>

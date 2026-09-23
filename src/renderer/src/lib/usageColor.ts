@@ -30,6 +30,30 @@ export function hasReadings(snapshot?: UsageSnapshot): boolean {
 }
 
 /** "in 48 min" / "in 3h 12m" / "Tue 11:07 PM" from an absolute reset time; undefined once it has passed. */
+/**
+ * How far through the current limit window we are, as a percentage — the
+ * "even burn" reference for the ring's pace tick. Needs the window length,
+ * which is inferred from the metric's own wording ("5-hour limit",
+ * "Weekly limit") plus how long is left until it resets.
+ */
+export function paceReference(metric?: { label?: string; resetsAt?: string }): number | undefined {
+  if (!metric?.resetsAt) return undefined
+  const msLeft = new Date(metric.resetsAt).getTime() - Date.now()
+  if (!Number.isFinite(msLeft) || msLeft <= 0) return undefined
+  const label = (metric.label ?? '').toLowerCase()
+  const windowMs = /month/.test(label)
+    ? 30 * 86_400_000
+    : /week/.test(label)
+      ? 7 * 86_400_000
+      : /(\d+)\s*-?\s*hour/.exec(label)
+        ? Number(/(\d+)\s*-?\s*hour/.exec(label)![1]) * 3_600_000
+        : /session|current/.test(label)
+          ? 5 * 3_600_000
+          : undefined
+  if (!windowMs || msLeft > windowMs) return undefined
+  return Math.round(((windowMs - msLeft) / windowMs) * 100)
+}
+
 export function formatUntil(iso?: string, now = Date.now()): string | undefined {
   if (!iso) return undefined
   const ms = new Date(iso).getTime() - now

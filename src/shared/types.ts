@@ -232,6 +232,10 @@ export interface AppSettings {
   islandCollapsed: boolean
   /** Show the highest usage percentage next to the menu-bar icon (macOS). */
   menuBarUsage: boolean
+  /** Hide the island entirely and live in the menu bar / tray only. */
+  islandHidden: boolean
+  /** A notification summarising the week when the longest window resets. */
+  weeklyDigest: boolean
   /** The first-run hint has been dismissed. */
   onboardingSeen: boolean
   launchAtLogin: boolean
@@ -317,5 +321,6 @@ export const IpcChannel = {
   ActivityRescan: 'activity:rescan',
   ActivityUpdated: 'activity:updated',
   ForecastGetAll: 'forecast:getAll',
-  WindowOpenActivity: 'window:openActivity'
+  WindowOpenActivity: 'window:openActivity',
+  WindowCloseWelcome: 'window:closeWelcome'
 } as const

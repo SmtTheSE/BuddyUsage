@@ -1,6 +1,6 @@
 import { app } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { createIslandWindow, getIslandWindow } from './windows/islandWindow'
+import { applyIslandVisibility, createIslandWindow, getIslandWindow } from './windows/islandWindow'
 import { createTray } from './tray'
 import { applySettings, registerIpcHandlers } from './ipc'
 import { startScrapeScheduler, stopScrapeScheduler } from './scraping/scheduler'
@@ -10,6 +10,7 @@ import { CHROME_USER_AGENT } from './scraping/browserIdentity'
 import { startUpdateChecks } from './updates/updater'
 import { startAgents, stopAgents } from './agents'
 import { startInsights, stopInsights } from './insights'
+import { openWelcomeWindow } from './windows/welcomeWindow'
 
 // Default UA for every session, so nothing anywhere advertises "Electron".
 app.userAgentFallback = CHROME_USER_AGENT
@@ -42,10 +43,14 @@ if (!gotLock) {
 
     registerIpcHandlers()
     createIslandWindow(applySettings)
+    if (getSettings().islandHidden) applyIslandVisibility(true)
     createTray()
     startScrapeScheduler()
     void startAgents()
     startInsights()
+    // First run: walk through assistants and sign-in rather than leaving a
+    // row of grey "Sign in" rings to figure out.
+    if (!getSettings().onboardingSeen) openWelcomeWindow()
     if (app.isPackaged) startUpdateChecks()
 
     app.on('activate', () => {

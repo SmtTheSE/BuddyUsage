@@ -5,6 +5,7 @@ import { getProvider } from '../providers/registry'
 import { activityReport, isScanning, onActivityChanged, scanActivity } from './activity'
 import { forecastFor, recordSnapshot } from './history'
 import { handleSnapshotForAlerts } from './alerts'
+import { handleSnapshotForDigest } from './digest'
 
 /**
  * Wires the local-insight pieces (activity scan, pace history, alerts) to
@@ -30,6 +31,7 @@ export function startInsights(): void {
   onSnapshotUpdated((snapshot) => {
     recordSnapshot(snapshot)
     handleSnapshotForAlerts(snapshot)
+    handleSnapshotForDigest(snapshot)
   })
   onActivityChanged(() => broadcast(IpcChannel.ActivityUpdated, isScanning()))
   void scanActivity()

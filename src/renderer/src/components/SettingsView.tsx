@@ -163,6 +163,17 @@ export function SettingsView(): JSX.Element | null {
         </div>
         <div className="row">
           <span className="row__main">
+            <span className="row__label">Weekly recap</span>
+            <span className="row__hint">A notification when a weekly limit rolls over: what the week used and the heaviest project.</span>
+          </span>
+          <Switch
+            checked={settings.weeklyDigest}
+            label="Weekly recap"
+            onChange={(next) => void updateSettings({ weeklyDigest: next })}
+          />
+        </div>
+        <div className="row">
+          <span className="row__main">
             <span className="row__label">Launch at login</span>
           </span>
           <Switch
@@ -202,6 +213,17 @@ export function SettingsView(): JSX.Element | null {
             checked={settings.menuBarUsage}
             label="Show usage in menu bar"
             onChange={(next) => void updateSettings({ menuBarUsage: next })}
+          />
+        </div>
+        <div className="row">
+          <span className="row__main">
+            <span className="row__label">Hide the island</span>
+            <span className="row__hint">Menu bar only: no floating object on screen. Everything stays available from the icon.</span>
+          </span>
+          <Switch
+            checked={settings.islandHidden}
+            label="Hide island"
+            onChange={(next) => void updateSettings({ islandHidden: next })}
           />
         </div>
         <div className="row">

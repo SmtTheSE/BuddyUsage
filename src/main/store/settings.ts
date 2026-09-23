@@ -4,7 +4,7 @@ import { DEFAULT_ALERT_THRESHOLDS, DEFAULT_LIMIT_GUARD_PERCENT, DEFAULT_REFRESH_
 import { randomBytes } from 'crypto'
 import { providerRegistry } from '../providers/registry'
 
-const CURRENT_SCHEMA_VERSION = 5
+const CURRENT_SCHEMA_VERSION = 6
 
 function defaultSettings(): AppSettings {
   return {
@@ -15,6 +15,8 @@ function defaultSettings(): AppSettings {
     verticalOffset: 120,
     islandCollapsed: false,
     menuBarUsage: false,
+    islandHidden: false,
+    weeklyDigest: true,
     onboardingSeen: false,
     launchAtLogin: false,
     theme: 'auto',

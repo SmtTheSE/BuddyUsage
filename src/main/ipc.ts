@@ -5,9 +5,16 @@ import { getAllSnapshots, getSnapshot, onSnapshotUpdated } from './store/usageSt
 import { getSettings, updateSettings } from './store/settings'
 import { refreshProviderNow, restartScrapeScheduler } from './scraping/scheduler'
 import { isSyncing, onSyncStateChanged, requestProviderLogin } from './scraping/scrapeRunner'
-import { getIslandWindow, repositionIslandWindow, setIgnoreMouse, setIslandFocusable } from './windows/islandWindow'
+import {
+  applyIslandVisibility,
+  getIslandWindow,
+  repositionIslandWindow,
+  setIgnoreMouse,
+  setIslandFocusable
+} from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
 import { openActivityWindow } from './windows/activityWindow'
+import { closeWelcomeWindow } from './windows/welcomeWindow'
 import { allForecasts, getActivity, rescanActivity } from './insights'
 import { refreshTrayTitle } from './tray'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState, openDownloadPage } from './updates/updater'
@@ -52,6 +59,7 @@ export function applySettings(patch: Partial<AppSettings>): AppSettings {
     app.setLoginItemSettings({ openAtLogin: next.launchAtLogin })
   }
   refreshTrayTitle()
+  if (patch.islandHidden !== undefined) applyIslandVisibility(next.islandHidden)
   if (patch.remoteEnabled !== undefined || patch.limitGuard !== undefined) void applyAgentSettings()
   broadcast(IpcChannel.SettingsUpdated, next)
   return next
@@ -114,6 +122,7 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle(IpcChannel.WindowOpenActivity, () => void openActivityWindow())
+  ipcMain.handle(IpcChannel.WindowCloseWelcome, () => closeWelcomeWindow())
   ipcMain.handle(IpcChannel.ActivityGet, (_e, rangeDays: number) => getActivity(rangeDays))
   ipcMain.handle(IpcChannel.ActivityRescan, (_e, rangeDays: number) => rescanActivity(rangeDays))
   ipcMain.handle(IpcChannel.ForecastGetAll, () => allForecasts())

@@ -152,6 +152,14 @@ export function getIslandWindow(): BrowserWindow | null {
   return islandWindow && !islandWindow.isDestroyed() ? islandWindow : null
 }
 
+/** Menu-bar-only mode: keep the app running with no floating object on screen. */
+export function applyIslandVisibility(hidden: boolean): void {
+  const win = getIslandWindow()
+  if (!win || win.isDestroyed()) return
+  if (hidden) win.hide()
+  else win.showInactive()
+}
+
 export function repositionIslandWindow(): void {
   const win = getIslandWindow()
   if (!win) return

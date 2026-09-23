@@ -8,13 +8,18 @@ interface RingProps {
   stroke?: number
   /** Soft shimmer while the first sync is in flight. */
   loading?: boolean
+  /**
+   * Where an even burn would have you by now (0-100). Drawn as a faint
+   * tick: past it means you are ahead of pace for this window.
+   */
+  pacePercent?: number
   children?: React.ReactNode
 }
 
 const SPRING = { type: 'spring', stiffness: 70, damping: 18, mass: 0.9 } as const
 
 /** Circular progress gauge with the provider mark in the centre and a lit cap at the arc's leading edge. */
-export function Ring({ percent, color, size = 74, stroke = 6, loading = false, children }: RingProps): JSX.Element {
+export function Ring({ percent, color, size = 74, stroke = 6, loading = false, pacePercent, children }: RingProps): JSX.Element {
   const gradientId = useId()
   const glowId = useId()
   const radius = (size - stroke) / 2
@@ -40,6 +45,18 @@ export function Ring({ percent, color, size = 74, stroke = 6, loading = false, c
           </filter>
         </defs>
         <circle cx={c} cy={c} r={radius} className="ring__track" strokeWidth={stroke} />
+        {typeof pacePercent === 'number' && pacePercent > 2 && pacePercent < 99 && (
+          <g transform={`rotate(${(Math.min(100, pacePercent) / 100) * 360} ${c} ${c})`}>
+            <line
+              className="ring__pace"
+              x1={c}
+              y1={c - radius - stroke / 2 - 1}
+              x2={c}
+              y2={c - radius + stroke / 2 + 1}
+              strokeWidth={1.5}
+            />
+          </g>
+        )}
         <motion.circle
           cx={c}
           cy={c}

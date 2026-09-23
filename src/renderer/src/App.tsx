@@ -3,12 +3,14 @@ import { useAppStore } from './state/store'
 import { Island } from './components/Island'
 import { SettingsView } from './components/SettingsView'
 import { ActivityView } from './components/ActivityView'
+import { WelcomeView } from './components/WelcomeView'
 
-type Route = 'island' | 'settings' | 'activity'
+type Route = 'island' | 'settings' | 'activity' | 'welcome'
 
 function routeFromHash(): Route {
   if (window.location.hash === '#settings') return 'settings'
   if (window.location.hash === '#activity') return 'activity'
+  if (window.location.hash === '#welcome') return 'welcome'
   return 'island'
 }
 
@@ -42,5 +44,6 @@ export function App(): JSX.Element {
 
   if (route === 'settings') return <SettingsView />
   if (route === 'activity') return <ActivityView />
+  if (route === 'welcome') return <WelcomeView />
   return <Island />
 }

@@ -4,6 +4,10 @@ import { chatgptProvider } from './chatgpt'
 import { geminiProvider } from './gemini'
 import { cursorProvider } from './cursor'
 import { copilotProvider } from './copilot'
+import { windsurfProvider } from './windsurf'
+import { openrouterProvider } from './openrouter'
+import { anthropicApiProvider } from './anthropicApi'
+import { openaiApiProvider } from './openaiApi'
 
 /**
  * The single place that lists every supported assistant. Adding a new one:
@@ -16,7 +20,11 @@ export const providerRegistry: ProviderDefinition[] = [
   chatgptProvider,
   geminiProvider,
   cursorProvider,
-  copilotProvider
+  copilotProvider,
+  windsurfProvider,
+  openrouterProvider,
+  anthropicApiProvider,
+  openaiApiProvider
 ]
 
 export function getProvider(id: string): ProviderDefinition | undefined {

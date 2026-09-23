@@ -3,7 +3,6 @@ import trayIcon1x from '../../resources/trayTemplate.png?asset'
 import trayIcon2x from '../../resources/trayTemplate@2x.png?asset'
 import trayIconColor from '../../resources/trayColor.png?asset'
 import { refreshProviderNow } from './scraping/scheduler'
-import { getIslandWindow } from './windows/islandWindow'
 import { openSettingsWindow } from './windows/settingsWindow'
 import { openActivityWindow } from './windows/activityWindow'
 import { providerRegistry } from './providers/registry'
@@ -11,6 +10,7 @@ import { requestProviderLogin } from './scraping/scrapeRunner'
 import { checkForUpdates, getUpdateState, installUpdate, onUpdateState } from './updates/updater'
 import { getAllSnapshots, onSnapshotUpdated } from './store/usageStore'
 import { getSettings } from './store/settings'
+import { applySettings } from './ipc'
 import { primaryMetric } from '@shared/types'
 
 let tray: Tray | null = null
@@ -58,7 +58,9 @@ function buildMenu(): Menu {
       }))
     },
     { type: 'separator' },
-    { label: 'Show Island', click: () => getIslandWindow()?.show() },
+    getSettings().islandHidden
+      ? { label: 'Show Island', click: () => void applySettings({ islandHidden: false }) }
+      : { label: 'Hide Island', click: () => void applySettings({ islandHidden: true }) },
     { label: 'Activity…', click: () => openActivityWindow() },
     { label: 'Settings…', click: () => openSettingsWindow() },
     { type: 'separator' },

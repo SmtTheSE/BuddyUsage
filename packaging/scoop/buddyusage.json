@@ -1,0 +1,42 @@
+{
+  "version": "0.0.0",
+  "description": "An edge-docked island showing live plan usage for Claude, ChatGPT/Codex, Gemini, Cursor and GitHub Copilot.",
+  "homepage": "https://smtthese.github.io/BuddyUsage/",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/SmtTheSE/BuddyUsage/releases/download/v0.0.0/BuddyUsage-x64.exe#/dl.exe",
+      "hash": "REPLACED_BY_CI"
+    },
+    "arm64": {
+      "url": "https://github.com/SmtTheSE/BuddyUsage/releases/download/v0.0.0/BuddyUsage-arm64.exe#/dl.exe",
+      "hash": "REPLACED_BY_CI"
+    }
+  },
+  "innosetup": false,
+  "installer": {
+    "script": [
+      "# NSIS per-user installer: /S installs silently for the current user.",
+      "Start-Process -Wait -FilePath \"$dir\\dl.exe\" -ArgumentList '/S'"
+    ]
+  },
+  "uninstaller": {
+    "script": [
+      "$un = \"$env:LOCALAPPDATA\\Programs\\buddy-usage\\Uninstall BuddyUsage.exe\"",
+      "if (Test-Path $un) { Start-Process -Wait -FilePath $un -ArgumentList '/S' }"
+    ]
+  },
+  "checkver": {
+    "github": "https://github.com/SmtTheSE/BuddyUsage"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/SmtTheSE/BuddyUsage/releases/download/v$version/BuddyUsage-x64.exe#/dl.exe"
+      },
+      "arm64": {
+        "url": "https://github.com/SmtTheSE/BuddyUsage/releases/download/v$version/BuddyUsage-arm64.exe#/dl.exe"
+      }
+    }
+  }
+}
