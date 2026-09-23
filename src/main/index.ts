@@ -11,6 +11,7 @@ import { startUpdateChecks } from './updates/updater'
 import { startAgents, stopAgents } from './agents'
 import { startInsights, stopInsights } from './insights'
 import { openWelcomeWindow } from './windows/welcomeWindow'
+import { clearOwnQuarantineFlag } from './gatekeeper'
 
 // Default UA for every session, so nothing anywhere advertises "Electron".
 app.userAgentFallback = CHROME_USER_AGENT
@@ -41,6 +42,7 @@ if (!gotLock) {
     // Keep the OS login item in sync with the persisted preference.
     app.setLoginItemSettings({ openAtLogin: getSettings().launchAtLogin })
 
+    clearOwnQuarantineFlag()
     registerIpcHandlers()
     createIslandWindow(applySettings)
     if (getSettings().islandHidden) applyIslandVisibility(true)

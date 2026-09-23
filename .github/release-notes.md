@@ -19,7 +19,7 @@ Not sure which Mac you have? Click the Apple menu → **About This Mac**: "Apple
 curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
 
-**Homebrew users:** `brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage && brew trust SmtTheSE/buddyusage && brew install --cask buddyusage`
+**Homebrew users:** `brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage && brew install --cask buddyusage` (Homebrew 7 removed its no-quarantine option, so this shows the same one-time prompt as the DMG).
 
 **Or the DMG:**
 
@@ -28,9 +28,12 @@ curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh
 3. If your Mac says it **"could not verify"** the app or that it's from an **unidentified developer**:
    - Click **Done** (or **Cancel**).
    - Open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to BuddyUsage.
-   - Confirm with your password or Touch ID. This only happens the first time.
+   - Confirm with your password or Touch ID.
 
-   On older macOS versions, right-click (or Control-click) BuddyUsage in Applications and choose **Open**, then **Open** again.
+   **This happens once, not every release.** Once you allow it, BuddyUsage clears the flag on its own copy, and future versions install through the in-app updater rather than a browser download.
+
+   Want to check what you downloaded? Every release publishes `SHA256SUMS.txt` and a signed build provenance attestation:
+   `gh attestation verify BuddyUsage-arm64.dmg --repo SmtTheSE/BuddyUsage`
 
 BuddyUsage runs as a small glass island on the edge of your screen (drag it anywhere — it snaps to the nearest edge) plus an icon in the menu bar. Click a ring → **Sign in** to connect each assistant. Free plans are supported: where a provider publishes no meter, the card says so instead of showing an error.
 

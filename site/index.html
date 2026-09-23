@@ -141,6 +141,14 @@
     .panel { display: none; margin-top: 30px; }
     .panel[data-active="true"] { display: block; }
     .dl-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    /* Two clearly separated install routes, so nobody has to guess which to follow. */
+    .choice { border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 24px; margin-bottom: 18px; }
+    .choice__head { margin-bottom: 10px; }
+    .choice__head h3 { margin: 6px 0 0; }
+    .choice > .muted { font-size: 16px; max-width: 62ch; margin: 0 0 16px; }
+    .copy-row { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+    .copy-row code { flex: 1; min-width: 260px; padding: 12px 14px; border-radius: 12px; background: var(--dark); color: var(--ivory); font-family: ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+    .copy-row .btn { align-self: center; }
     .hint { margin-top: 12px; font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
     .steps { counter-reset: step; list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 14px; max-width: 70ch; }
     .steps li { position: relative; padding-left: 44px; font-size: 17px; }
@@ -301,27 +309,49 @@
       </div>
 
       <div class="panel" data-panel="mac" data-active="true">
-        <div class="dl-row">
-          <a class="btn btn-dark" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">Download for Apple Silicon</a>
-          <a class="btn btn-light" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">Download for Intel</a>
+        <div class="choice">
+          <div class="choice__head">
+            <span class="label">Option 1 · no security prompt</span>
+            <h3 class="serif-h">Paste one line</h3>
+          </div>
+          <p class="muted">Open <strong>Terminal</strong> (Command-Space, type "terminal"), paste this, press Return. It downloads the right build for your Mac, puts it in Applications and opens it. Because the download does not come through a browser, macOS does not flag it, so there is no warning to click through.</p>
+          <div class="copy-row">
+            <code id="mac-cmd">curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash</code>
+            <button class="btn btn-dark" type="button" data-copy="mac-cmd">Copy</button>
+          </div>
         </div>
-        <p class="hint">Not sure which? Apple menu, then <strong>About This Mac</strong>. "Apple M" means Apple Silicon.</p>
-        <ol class="steps">
-          <li>Open the downloaded <code>.dmg</code> and drag <strong>BuddyUsage</strong> onto <strong>Applications</strong>.</li>
-          <li>Open Applications and double-click <strong>BuddyUsage</strong>. The island appears on the right edge; its icon sits in the menu bar.</li>
-          <li>Click a ring, then <strong>Sign in</strong>. A normal browser window opens on that provider's own login page. Once per provider.</li>
-        </ol>
-        <div class="callout">
-          <strong>If macOS says it "could not verify" the app</strong>
-          Open <strong>System Settings</strong>, then <strong>Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>, then confirm. This happens once. BuddyUsage is open source and not yet notarized with a paid Apple Developer ID. On older macOS, right-click the app and choose Open.
+
+        <div class="choice">
+          <div class="choice__head">
+            <span class="label">Option 2 · one prompt, once</span>
+            <h3 class="serif-h">Download the app</h3>
+          </div>
+          <div class="dl-row">
+            <a class="btn btn-dark" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg">Download for Apple Silicon</a>
+            <a class="btn btn-light" href="https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg">Download for Intel</a>
+          </div>
+          <p class="hint">Not sure which? Apple menu, then <strong>About This Mac</strong>. "Apple M" means Apple Silicon.</p>
+          <ol class="steps">
+            <li>Open the downloaded <code>.dmg</code> and drag <strong>BuddyUsage</strong> onto <strong>Applications</strong>.</li>
+            <li>Open Applications and double-click <strong>BuddyUsage</strong>. macOS says it cannot verify the developer. Click <strong>Done</strong>.</li>
+            <li>Open <strong>System Settings</strong>, then <strong>Privacy &amp; Security</strong>, scroll to the bottom and click <strong>Open Anyway</strong> next to BuddyUsage, then confirm.</li>
+          </ol>
+          <div class="callout">
+            <strong>This happens once, not every time</strong>
+            After you allow it, BuddyUsage clears the flag on itself, and every future version installs through the in-app updater, which is not a browser download. You will not see this screen again.
+          </div>
         </div>
+
         <details class="alt">
-          <summary>Install from Terminal instead (no security prompt)</summary>
-          <pre>curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash</pre>
-          <p class="hint">Homebrew:</p>
+          <summary>Why does macOS ask at all?</summary>
+          <p class="hint">Apple only skips this warning for apps signed with a paid Developer ID and notarized by Apple. BuddyUsage is free and open source and does not have one yet, so Gatekeeper treats a browser download as unidentified. The installer above avoids it entirely, and the source, the build workflow and a signed provenance attestation for every release are public if you want to check what you are running.</p>
+          <pre>gh attestation verify BuddyUsage-arm64.dmg --repo SmtTheSE/BuddyUsage</pre>
+        </details>
+        <details class="alt">
+          <summary>Homebrew</summary>
           <pre>brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
-brew trust SmtTheSE/buddyusage
 brew install --cask buddyusage</pre>
+          <p class="hint">Homebrew 7 removed its no-quarantine option, so this path shows the same one-time prompt as the download. Upgrades: <code>brew upgrade --cask buddyusage</code>.</p>
         </details>
       </div>
 
@@ -379,6 +409,24 @@ brew install --cask buddyusage</pre>
   </footer>
 
   <script>
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const source = document.getElementById(button.dataset.copy);
+        try {
+          await navigator.clipboard.writeText(source.textContent.trim());
+          const original = button.textContent;
+          button.textContent = 'Copied';
+          setTimeout(() => { button.textContent = original; }, 1600);
+        } catch {
+          const range = document.createRange();
+          range.selectNodeContents(source);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      });
+    });
+
     const tabs = document.querySelectorAll('.tab');
     const panels = document.querySelectorAll('.panel');
     function select(name) {

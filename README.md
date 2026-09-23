@@ -34,30 +34,35 @@ you:
 
 ### macOS
 
-**Installer script — no security prompt at all:**
+Two routes. The first has no security prompt at all; the second has one,
+once.
+
+**1. Installer script — nothing to click through:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SmtTheSE/BuddyUsage/main/install.sh | bash
 ```
 
-**Homebrew — one prompt on first launch, easy upgrades:**
+It downloads the right build, installs it to `/Applications` and opens it.
+Because the download does not come through a browser, macOS never flags
+it.
+
+**2. DMG — one prompt, the first time:**
+[Apple Silicon](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg) ·
+[Intel](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg).
+Drag to Applications, double-click, and when macOS says it cannot verify
+the developer: **System Settings → Privacy & Security → Open Anyway →
+confirm**. After that the app clears the flag on itself and every later
+version arrives through the in-app updater, which is not a browser
+download, so the prompt never comes back.
+
+Homebrew works too, with the same one-time prompt (Homebrew 7 removed its
+no-quarantine option):
 
 ```bash
 brew tap SmtTheSE/buddyusage https://github.com/SmtTheSE/BuddyUsage
-brew trust SmtTheSE/buddyusage
 brew install --cask buddyusage
 ```
-
-Upgrades: `brew upgrade --cask buddyusage`. (Homebrew 5 removed its
-`--no-quarantine` flag, so this path shows the same one-time prompt as the
-DMG below.)
-
-**DMG — one prompt on first launch:**
-[Apple Silicon](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.dmg) ·
-[Intel](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-x64.dmg).
-Drag to Applications; the DMG window itself shows the steps. On first
-launch macOS says it *"could not verify"* the app → **System Settings →
-Privacy & Security → Open Anyway** (older macOS: right-click → Open). Once.
 
 ### Windows
 
@@ -78,18 +83,29 @@ anyway** (once).
 [ARM64 AppImage](https://github.com/SmtTheSE/BuddyUsage/releases/latest/download/BuddyUsage-arm64.AppImage),
 or `curl -fsSL …/install.sh | bash` as above. Make it executable and run.
 
-### Why the macOS prompt exists, and how to remove it
+### Why the macOS prompt exists
 
-Gatekeeper flags any browser download that isn't notarized by Apple, and
-notarization requires a paid Apple Developer ID — there is no open-source
-workaround for a browser download, and Homebrew now quarantines casks too.
-The one prompt-free route is the installer script, which downloads without
-a browser and clears the flag itself. If a Developer ID becomes
-available, see [Signed releases](#signed-releases-no-security-prompts) —
-the pipeline notarizes automatically and the DMG prompt disappears too.
-For Windows, [SignPath Foundation](https://signpath.org/foundation) signs
-open-source projects for free; the workflow accepts a standard `.pfx` via
-`WIN_CSC_LINK` once one is issued.
+Apple skips the warning only for apps signed with a **paid** Developer ID
+and notarized by Apple. BuddyUsage does not have one, so Gatekeeper treats
+a browser download as unidentified. There is no free workaround for that
+specific path: Homebrew 7 removed `--no-quarantine`, and `.pkg` installers
+need a paid certificate too.
+
+What there is instead:
+
+- the installer script, which does not download through a browser and so
+  is never flagged;
+- one approval for the DMG route, after which the app clears the flag on
+  its own bundle and updates install in place, so it does not recur;
+- published SHA-256 checksums and a signed build-provenance attestation,
+  so you can verify what you downloaded without trusting Apple's stamp:
+  `gh attestation verify BuddyUsage-arm64.dmg --repo SmtTheSE/BuddyUsage`.
+
+If someone donates or sponsors a Developer ID, adding five repository
+secrets turns notarization on for the next release with no code change
+([docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)). For Windows,
+[SignPath Foundation](https://signpath.org/foundation) signs open-source
+projects for free and the workflow already accepts the certificate.
 
 **CLI** (reads the same data the app collects, works even when the app isn't running):
 
